@@ -4,7 +4,6 @@ import React from 'react';
 import { EditorState } from 'draft-js';
 import {convertFromRaw, convertToRaw} from 'draft-js';
 import Editor from 'draft-js-plugins-editor';
-import RaisedButton from 'material-ui/RaisedButton';
 import basicTextStylePlugin from './plugins/basicTextStylePlugin';
 import addLinkPlugin from './plugins/addLinkPlugin';
 
@@ -38,27 +37,16 @@ class TextEditor extends React.Component {
     this.editor.focus()
   }
 
-  printContentToConsole = () => {
-    const content = this.state.editorState.getCurrentContent()
-    const results = convertToRaw(content)
-    results.blocks.map((block) => {
-      console.log(block.text)
-    })
-  }
-
-
-
   render() {
     const { editorState } = this.state;
     return (
       <div className="editor" onClick={this.focus}>
-        <RaisedButton label="Print Contents" onClick={this.printContentToConsole}/>
         <Editor
           editorState={editorState}
           onChange={this.onChange}
           plugins={this.plugins}
           ref={(element) => { this.editor = element }}
-          placeholder="Tell your story"
+          placeholder="What's on your mind? "
           spellCheck
         />
       </div>
