@@ -1,10 +1,15 @@
 from __future__ import print_function # In python 2.7
 import sys
 from flask import Flask, render_template, request
+from flask_cors import CORS, cross_origin
+from flask.json import jsonify
 from flask_sqlalchemy import SQLAlchemy
+import json
 
 app = Flask(__name__, static_folder='../static', template_folder='../static')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/blog'
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/local_blog'
 db = SQLAlchemy(app)
 
 # Create our database model
@@ -22,42 +27,51 @@ class User(db.Model):
 class Post(db.Model):
     __tablename__ = "posts"
     id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.Text())
-    post_type = db.Column(String(120))
+    category = db.Column(db.String(120))
+    display_date = db.Column(db.String(55))
+    date_added = db.Column(db.Date())
+    title = db.Column(db.String(55))
+    body = db.Column(db.Text())
 
-    def __init__(self, text):
-        self.text = text
+    def __init__(self, category="random", 
+                    display_date="today", 
+                    title="untitled",
+                    body=""):
+        self.body = body
+        self.title = title
+        self.category = category
+        self.display_date = display_date
 
     def __repr__(self):
-        return '<Post %r>' % self.text
+        return '<Post %r>' % (self.title)
 
 
 # Set "homepage" to index.html
 @app.route('/')
+@cross_origin()
 def index():
     return "Hey what's up"
 
 @app.route('/posts', methods=['GET'])
+@cross_origin()
 def get_posts():
-    if request.method == 'GET' and request.args['type']:
-        post_type = request.args['type']
-        results = db.session.query(Post).filter(Post.type == post_type)
-        for instance in results:
-            print("here are the results", instance, file=sys.stderr)
-        return results
-    return "nothing"
+    r = Post.query.all()
+    response_list = []
+    for post in r:
+        response_list.append({
+            "title": post.title,
+            "body": post.body
+        })
+    return jsonify(response_list)
 
-# Save e-mail to database and send to success page
-@app.route('/posts/create', methods=['POST'])
+@app.route('/posts/new', methods=['POST'])
+@cross_origin()
 def create_post():
-    post = None
-    if request.method == 'POST':
-        post = request.form['post']
-        new_post = Post(post)
-        db.session.add(new_post)
-        db.session.commit()
-        return "success"
-    return "failure"
+    post = json.loads(request.get_data())
+    new_post = Post(title=post["title"], body=post["body"])
+    db.session.add(new_post)
+    db.session.commit()
+    return "true"
 
 if __name__ == '__main__':
     app.debug = True
