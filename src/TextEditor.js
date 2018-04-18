@@ -1,7 +1,7 @@
 import 'draft-js/dist/Draft.css'
 import './App.css'
 import React from 'react'
-import { EditorState } from 'draft-js'
+import { EditorState, ContentState } from 'draft-js'
 import { Link } from 'react-router-dom'
 import {convertFromRaw, convertToRaw} from 'draft-js'
 import Editor from 'draft-js-plugins-editor'
@@ -15,8 +15,17 @@ class TextEditor extends React.Component {
   constructor(props) {
     super(props)
 
+    let post = this.props.location.state ? this.props.location.state.post : null
+    let postState = null
+    if(post){
+      postState = stateFromHTML(post.title + post.body)
+    }
+
     this.state = {
-      editorState: EditorState.createEmpty(),
+      editorState: postState 
+      ? EditorState.createWithContent(postState)
+      : EditorState.createEmpty(),
+      editing: !!postState
     }
 
     this.plugins = [
@@ -41,7 +50,7 @@ class TextEditor extends React.Component {
     this.editor.focus()
   }
 
-  savePost = () => {
+  createPost = () => {
     let post = {}
 
     const editorState = this.state.editorState
@@ -59,18 +68,20 @@ class TextEditor extends React.Component {
 
     Object.assign(post, {'body': body_html})
 
+    const reg = /#(\w+)/
+    let category = reg.exec(body_html)[0].substring(1)
+    category = category ? category : "random"
+    Object.assign(post, {'category': category})
 
-    /* TODO: 
-        - create an edit button that sends all the posts into the TextEditor
-        - work on converting the returned blog post into an EditorState object
-        - to reconvert the html after you get it from the DB use this:
-        - convertToRaw(stateFromHTML(post.title + post.body))
+    console.log("this is the post being posted", post)
+    return post
+  }
 
-        - expand the length of a blog post title (look at the migration page)
-        - https://blog.miguelgrinberg.com/post/flask-migrate-alembic-database-migration-wrapper-for-flask
-    */  
+  editPost = () => {
 
-    fetch('http://localhost:5000/posts/new', {
+    const post = this.createPost()
+
+    fetch('http://localhost:5000/posts/edit', {
       method: "post",
       headers: {
         'Accept': 'application/x-www-form-urlencoded;',
@@ -80,16 +91,32 @@ class TextEditor extends React.Component {
     }).then((response) => response)
   }
 
+  savePost = () => {
+
+    const post = this.createPost()
+
+    fetch('http://localhost:5000/posts/new', {
+      method: "post",
+      headers: {
+        'Accept': 'application/x-www-form-urlencoded;',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: JSON.stringify(post)
+    }).then((response) => {
+      response
+    })
+  }
+
   render() {
     const { editorState } = this.state;
 
     return (
       <div>
         <div className="button">
-          <RaisedButton label="Save Post" onClick={this.savePost}/>
+          <RaisedButton label="Save Post" onClick={this.state.editing ? this.editPost : this.savePost}/>
         </div>
         <div className="button">
-          <RaisedButton label="Discard Post" containerElement={<Link to="/blog-entries"/>}/>
+          <RaisedButton label="Back" containerElement={<Link to="/"/>}/>
         </div>
         <div className="editor" onClick={this.focus}>
           <Editor

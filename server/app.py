@@ -59,8 +59,10 @@ def get_posts():
     response_list = []
     for post in r:
         response_list.append({
+            "id": post.id,
             "title": post.title,
-            "body": post.body
+            "body": post.body,
+            "category": post.category
         })
     return jsonify(response_list)
 
@@ -68,11 +70,22 @@ def get_posts():
 @cross_origin()
 def create_post():
     post = json.loads(request.get_data())
-    new_post = Post(title=post["title"], body=post["body"])
+    new_post = Post(title=post["title"], body=post["body"], category=post["category"])
     db.session.add(new_post)
+    db.session.commit()
+    return "true"
+
+@app.route('/posts/edit', methods=['POST'])
+@cross_origin()
+def edit_post():
+    post = json.loads(request.get_data())
+    old_post = Post.query.filter_by(title=post["title"]).first()
+    old_post.body = post["body"]
+    old_post.category = post["category"]
+    print(old_post.category)
     db.session.commit()
     return "true"
 
 if __name__ == '__main__':
     app.debug = True
-    app.run()
+    app.run(threaded=True)

@@ -38,56 +38,84 @@ const StyledLink = styled(Link)`
   text-decoration: none;
 `
 
-const About = () => (
-  <div>
-    <h3>This is a blog</h3>
-  </div>
-)
-
 class App extends Component {
 
   constructor(props){
     super(props)
     this.state = {
       open: false,
-      edit: false
+      entries: [],
+      category_entries: []
     }
   }
 
-  /*
+  componentDidMount() {
+    // get the entries from the API
+    fetch('http://localhost:5000/posts')
+      .then((res) => res.json())
+      .then((response) => {
+      this.setState({ 
+        entries: response,
+        category_entries: response
+      });
+      console.log("successfully retrieved blog entries")
+    })
+  }
 
-    TODO:
+  /* TODO: 
+      - organize backend to models, routes, and app
+      - expand the length of a blog post title (look at the migration page)
+        -- https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-iv-database
 
-    Create the data model for a Post
-    - Each Post has a 
-      -- Category
-      -- Display Date
-      -- Time Stamp of creation
-      -- Title (maybe in the future)
-      -- Content 
-    
-    When you click "save" button in the Text Editor
-    - convert the editor content to HTML
+      - order the posts by most recently edited -> need to set time stamps on POST
+      
+      - undo a link     
 
-    Create the blog display component (Default Component)
-    - When a blog category is clicked, pull the posts that have to do with that subject
-    - just clicking "Blog" will give all the posts, latest ones first
-    - clicking one of the subcategories will only give posts of that category
-    - convert the entry html to editor content/state
-    - add a horizontal line between each entry
+    BUGS:
+      - if I change the title of the post, it adds a row instead of editing it
 
-    Create New Post
-    - Make a button in the AppBar to create a new Post
-    - Basically have a switch statement here -> if state of "edit" is 'false'
-      then show the "Create Post" button and also display BlogEntries
-    - If the state of "edit" is true, then instead of BlogEntries, display the TextEditor
-      and the "Create Post" button changes to "Save Post" and another button that says "Discard Post"
-    - When "Save Post" is clicked, make a POST request to store the blog entry;
-      if 'Discard Post' is clicked, then go back to all posts
+      NICE TO HAVE:
+      - as you scroll through the page, the title of the current post is shown in AppBar
+      - click on the title of an individual post to just view that post
+
+    categories:
+          "Economics", "New Music", "Philosophy", "Random"
+          "Politics", "History", "Culture", "Education"
   */
 
 
   handleOpen = () => this.setState({ open: !this.state.open})
+
+  handleOpenCategory = (posts) => {
+    this.handleOpen()
+    this.setState({
+      category_entries: posts
+    })
+  }
+
+  listCategories = () => {
+    // might need to fetch the posts here in order to get the categories
+    let menuItems = [<MenuItem primaryText="all" onClick={this.handleOpen} containerElement={<Link to="/"/>}/>]
+    let entries = this.state.entries
+    if(entries){
+      // collect categories
+      let dup_cats = entries.map((entry) => { return entry.category })
+      const categories = dup_cats.filter((v, i, a) => a.indexOf(v) === i)
+      for(let i = 0; i < categories.length; i++){
+        const posts = this.state.entries.filter((entry) => entry.category === categories[i])
+        //console.log(`these are the posts for ${categories[i]}`, posts)
+        menuItems.push(
+          (<MenuItem primaryText={`${categories[i]}`} 
+                    onClick={() => this.handleOpenCategory(posts)} 
+                    containerElement={
+                      <Link to={`/blog/${categories[i]}`}/>
+                    }
+          />)
+        )
+      }
+      return menuItems
+    }
+  }
 
   render() {
     return (
@@ -95,7 +123,7 @@ class App extends Component {
       <Router>
         <div>
         <AppBar
-          title="The New York Times"
+          title="the new work times"
           iconElementLeft={<StyledToc/>}
           titleStyle={titleStyle}
           style={appBarStyle}
@@ -106,29 +134,21 @@ class App extends Component {
         >
 
           <MenuItem
-            primaryText="Blog"
+            primaryText="blog"
             rightIcon={<ArrowDropRight />}
-            menuItems={[
-              <MenuItem primaryText="All" onClick={this.handleOpen} containerElement={<Link to="/blog-entries"/>}/>,
-              <MenuItem primaryText="Economics" onClick={this.handleOpen} />,
-              <MenuItem primaryText="New Music" onClick={this.handleOpen} />,
-              <MenuItem primaryText="Philosophy" onClick={this.handleOpen} />,
-              <MenuItem primaryText="Politics" onClick={this.handleOpen} />,
-              <MenuItem primaryText="History" onClick={this.handleOpen} />,
-              <MenuItem primaryText="Culture" onClick={this.handleOpen} />,
-              <MenuItem primaryText="Education" onClick={this.handleOpen} />, 
-              <MenuItem primaryText="Random " onClick={this.handleOpen} />
-            ]}/>
+            menuItems={this.listCategories()}
+          />
           <Divider />
-          <MenuItem>Poems</MenuItem>
+          <MenuItem>poems</MenuItem>
           <Divider />
-          <MenuItem>Ideas</MenuItem>
+          <MenuItem>ideas</MenuItem>
           <Divider />
-          <MenuItem>Music</MenuItem>
+          <MenuItem>music</MenuItem>
         </Drawer>
-        <Route exact path="/" component={About}/>
-        <Route path="/blog-entries" component={BlogEntries}/>
+        <Route exact path="/" render={() => <BlogEntries entries={this.state.entries}/>}/>
+        <Route path="/blog/:category" render={() => <BlogEntries entries={this.state.category_entries}/>}/>
         <Route path="/new-post" component={TextEditor}/>
+        <Route path="/edit-post/:id" component={TextEditor}/>        
         </div>
       </Router>
       </MuiThemeProvider>
