@@ -5,6 +5,7 @@ from flask_cors import CORS, cross_origin
 from flask.json import jsonify
 from flask_sqlalchemy import SQLAlchemy
 import json
+import datetime
 
 app = Flask(__name__, static_folder='../static', template_folder='../static')
 cors = CORS(app)
@@ -27,11 +28,11 @@ class User(db.Model):
 class Post(db.Model):
     __tablename__ = "posts"
     id = db.Column(db.Integer, primary_key=True)
-    category = db.Column(db.String(120))
-    display_date = db.Column(db.String(55))
-    date_added = db.Column(db.Date())
-    title = db.Column(db.String(55))
-    body = db.Column(db.Text())
+    category = db.Column(db.String)
+    display_date = db.Column(db.String)
+    date_added = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    title = db.Column(db.Text)  
+    body = db.Column(db.Text)
 
     def __init__(self, category="random", 
                     display_date="today", 
@@ -52,10 +53,20 @@ class Post(db.Model):
 def index():
     return "Hey what's up"
 
+@app.route('/login', methods=['POST'])
+@cross_origin()
+def login():
+    login = json.loads(request.get_data())
+    if login["password"] == "thatfuckinfool?heded":
+        return jsonify({"rahul": "true"})
+    else:
+        return jsonify({"rahul": ""})
+
+
 @app.route('/posts', methods=['GET'])
 @cross_origin()
 def get_posts():
-    r = Post.query.all()
+    r = Post.query.order_by(Post.date_added.desc()).all()
     response_list = []
     for post in r:
         response_list.append({
@@ -79,12 +90,24 @@ def create_post():
 @cross_origin()
 def edit_post():
     post = json.loads(request.get_data())
-    old_post = Post.query.filter_by(title=post["title"]).first()
+    old_post = Post.query.filter_by(title=post["old_post_title"]).first()
+    print(post["old_post_title"], post["title"])
+    if post["old_post_title"] != post["title"]:
+        old_post.title = post["title"]
     old_post.body = post["body"]
     old_post.category = post["category"]
-    print(old_post.category)
     db.session.commit()
     return "true"
+
+@app.route('/posts/delete', methods=['POST'])
+@cross_origin()
+def delete_post():
+    # get the post
+    post = json.loads(request.get_data())
+    Post.query.filter_by(title=post["old_post_title"]).delete()
+    # save the change
+    db.session.commit()
+    return "true"    
 
 if __name__ == '__main__':
     app.debug = True

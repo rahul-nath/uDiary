@@ -11,7 +11,8 @@ class BlogEntries extends React.Component {
     super(props)
 
     this.state = {
-      entries: this.props.entries
+      entries: this.props.entries,
+      rahul: this.props.rahul
     }
   }
 
@@ -26,12 +27,15 @@ class BlogEntries extends React.Component {
           <div className="editor">
             <div dangerouslySetInnerHTML={{ __html: post.title }} />
             <div dangerouslySetInnerHTML={{ __html: post.body }} />          
-            <RaisedButton 
-              label="Edit"
-              containerElement={
-                <Link to={{ pathname: `/edit-post/${post.id}`, state: { post: post }}}/>
-              }
-            />
+            { this.state.rahul ? 
+              <RaisedButton 
+                label="Edit"
+                containerElement={
+                  <Link to={{ pathname: `/edit-post/${post.id}`, state: { post: post }}}/>
+                }
+              />
+              : null
+            }
             <hr/>
           </div>          
         )
@@ -42,9 +46,12 @@ class BlogEntries extends React.Component {
   render() {
     return (
       <div>
-        <div className="button">
-          <RaisedButton label="Create Post" containerElement={<Link to="/new-post"/>}/>
-        </div>
+        { this.state.rahul ? 
+          <div className="button">
+            <RaisedButton label="Create Post" containerElement={<Link to="/new-post"/>}/>
+          </div>
+          : null
+        }
          <div>
           {this.displayPosts(this.state.entries)}      
         </div>        
