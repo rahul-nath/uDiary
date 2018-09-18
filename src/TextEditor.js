@@ -93,7 +93,7 @@ class TextEditor extends React.Component {
     const post = this.createPost()
 
     fetch('http://localhost:5000/posts/edit', {
-      method: "post",
+      method: "put",
       headers: {
         'Accept': 'application/x-www-form-urlencoded;',
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -123,7 +123,7 @@ class TextEditor extends React.Component {
   deletePost = () => {
     const post = this.createPost()
     fetch('http://localhost:5000/posts/delete', {
-      method: "post",
+      method: "delete",
       headers: {
         'Accept': 'application/x-www-form-urlencoded;',
         'Content-Type': 'application/x-www-form-urlencoded'

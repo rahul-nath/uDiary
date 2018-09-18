@@ -86,7 +86,7 @@ def create_post():
     db.session.commit()
     return "true"
 
-@app.route('/posts/edit', methods=['POST'])
+@app.route('/posts/edit', methods=['PUT'])
 @cross_origin()
 def edit_post():
     post = json.loads(request.get_data())
@@ -99,7 +99,7 @@ def edit_post():
     db.session.commit()
     return "true"
 
-@app.route('/posts/delete', methods=['POST'])
+@app.route('/posts/delete', methods=['DELETE'])
 @cross_origin()
 def delete_post():
     # get the post

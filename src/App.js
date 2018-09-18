@@ -47,6 +47,7 @@ class App extends Component {
 
   /* TODO: 
 
+    - enable picture and youtube video rendering
     - have multiple categories (just change the category check to a list)
       - add a redundant row for each category
 
