@@ -31,11 +31,11 @@ class Post(db.Model):
     category = db.Column(db.String)
     display_date = db.Column(db.String)
     date_added = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    title = db.Column(db.Text)  
+    title = db.Column(db.Text)
     body = db.Column(db.Text)
 
-    def __init__(self, category="random", 
-                    display_date="today", 
+    def __init__(self, category="random",
+                    display_date="today",
                     title="untitled",
                     body=""):
         self.body = body
@@ -91,7 +91,6 @@ def create_post():
 def edit_post():
     post = json.loads(request.get_data())
     old_post = Post.query.filter_by(title=post["old_post_title"]).first()
-    print(post["old_post_title"], post["title"])
     if post["old_post_title"] != post["title"]:
         old_post.title = post["title"]
     old_post.body = post["body"]
@@ -107,7 +106,7 @@ def delete_post():
     Post.query.filter_by(title=post["old_post_title"]).delete()
     # save the change
     db.session.commit()
-    return "true"    
+    return "true"
 
 if __name__ == '__main__':
     app.debug = True

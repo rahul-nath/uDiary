@@ -1,5 +1,6 @@
 import 'draft-js/dist/Draft.css'
 import './App.css'
+import _ from 'lodash'
 import React from 'react'
 import { EditorState, ContentState } from 'draft-js'
 import  { Redirect } from 'react-router-dom'
@@ -23,7 +24,7 @@ class TextEditor extends React.Component {
     }
 
     this.state = {
-      editorState: postState 
+      editorState: postState
       ? EditorState.createWithContent(postState)
       : EditorState.createEmpty(),
       editing: !!postState,
@@ -35,6 +36,10 @@ class TextEditor extends React.Component {
       addLinkPlugin,
       basicTextStylePlugin,
     ]
+
+    const saveTime = this.state.editorState.getCurrentContent().hasText() ? 2000 : 6000
+
+    this._save = _.debounce(() => this.state.editing ? this._editPost() : this._savePost(), saveTime)
   }
 
   componentDidMount() {
@@ -57,6 +62,10 @@ class TextEditor extends React.Component {
       this.setState({
         editorState,
       });
+
+      if(editorState.getCurrentContent().hasText()){
+        this._save()
+      }
     }
   }
 
@@ -67,28 +76,29 @@ class TextEditor extends React.Component {
   createPost = () => {
     let post = {}
 
-    const editorState = this.state.editorState
+    const { editorState, oldTitle } = this.state
     const content = editorState.getCurrentContent()
-
-    Object.assign(post, {'title': this.getTitle(content)})
-    Object.assign(post, {'old_post_title': this.state.oldTitle})
+    const title = this.getTitle(content)
 
     let body = Object.assign({}, convertToRaw(content))
     body.blocks.splice(0, 1)
-    let body_html = stateToHTML(convertFromRaw(body))
-
-    Object.assign(post, {'body': body_html})
+    let bodyHtml = stateToHTML(convertFromRaw(body))
+    const newBody = bodyHtml ? bodyHtml : <br/>
 
     const reg = /#(\w+)/
-    let category = reg.exec(body_html)
-
+    let category = reg.exec(bodyHtml)
     category = category ? category[0].substring(1) : "random"
-    Object.assign(post, {'category': category})
 
+    Object.assign(post, {
+      'title': (title ? title : ""),
+      'old_post_title': oldTitle,
+      'body': newBody,
+      'category': category
+    })
     return post
   }
 
-  editPost = () => {
+  _editPost = () => {
 
     const post = this.createPost()
 
@@ -99,14 +109,13 @@ class TextEditor extends React.Component {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: JSON.stringify(post)
-    }).then((response) => {
-      this.setState({ redirect: true})
     })
   }
 
-  savePost = () => {
+  _savePost = () => {
 
     const post = this.createPost()
+    this.setState({ editing: true })
 
     fetch('http://localhost:5000/posts/new', {
       method: "post",
@@ -115,8 +124,8 @@ class TextEditor extends React.Component {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: JSON.stringify(post)
-    }).then((response) => {
-      this.setState({ redirect: true})
+    }).catch((error) => {
+      this.setState({ editing: false })
     })
   }
 
@@ -146,13 +155,19 @@ class TextEditor extends React.Component {
       <div>
         <div className="button">
           <div>
-            <RaisedButton label="Save" onClick={this.state.editing ? this.editPost : this.savePost}/>
+            <RaisedButton label="Save"
+            onClick={
+              this.state.editing ? this._editPost : this._savePost
+            }/>
           </div>
           <div>
-            <RaisedButton label="Back" containerElement={<Link to="/"/>}/>
+            <RaisedButton
+              label="Back"
+              onClick={() => this.setState({ redirect: true})}
+            />
           </div>
           <div>
-            <RaisedButton label="Delete" onClick={this.state.editing ? this.deletePost : () => {}}/>
+            <RaisedButton label="Delete" onClick={this.state.editing && this.deletePost}/>
           </div>
         </div>
         <div className="editor" onClick={this.focus}>
@@ -165,7 +180,7 @@ class TextEditor extends React.Component {
             spellCheck
           />
         </div>
-      </div>      
+      </div>
     )
   }
 }

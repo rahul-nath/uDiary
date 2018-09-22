@@ -8,6 +8,7 @@
     "draft-js-import-html": "^1.2.1",
     "draft-js-plugins-editor": "^2.0.4",
     "fontfaceobserver": "^2.0.13",
+    "lodash": "^4.17.11",
     "material-design-icons": "^3.0.1",
     "material-ui": "^0.19.1",
     "react": "^15.6.1",
