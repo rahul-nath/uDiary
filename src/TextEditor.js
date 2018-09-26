@@ -37,7 +37,7 @@ class TextEditor extends React.Component {
       basicTextStylePlugin,
     ]
 
-    const saveTime = this.state.editorState.getCurrentContent().hasText() ? 2000 : 6000
+    const saveTime = this.state.editorState.getCurrentContent().hasText() ? 1000 : 6000
 
     this._save = _.debounce(() => this.state.editing ? this._editPost() : this._savePost(), saveTime)
   }
@@ -87,6 +87,7 @@ class TextEditor extends React.Component {
 
     const reg = /#(\w+)/
     let category = reg.exec(bodyHtml)
+    console.log("this is test category", category)
     category = category ? category[0].substring(1) : "random"
 
     Object.assign(post, {
