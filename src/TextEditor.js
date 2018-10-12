@@ -2,9 +2,7 @@ import 'draft-js/dist/Draft.css'
 import './App.css'
 import _ from 'lodash'
 import React from 'react'
-import { EditorState, ContentState } from 'draft-js'
-import  { Redirect } from 'react-router-dom'
-import { Link } from 'react-router-dom'
+import { EditorState } from 'draft-js'
 import {convertFromRaw, convertToRaw} from 'draft-js'
 import Editor from 'draft-js-plugins-editor'
 import basicTextStylePlugin from './plugins/basicTextStylePlugin'
@@ -17,17 +15,17 @@ class TextEditor extends React.Component {
   constructor(props) {
     super(props)
 
-    let post = this.props.location.state ? this.props.location.state.post : null
-    let postState = null
+    const post = this.props.location.state ? this.props.location.state.post : null
+    const { id } = this.props.match.params
+    let postState
     if(post){
       postState = stateFromHTML(post.title + post.body)
     }
-
     this.state = {
+      id: id ? id : 0,
       editorState: postState
       ? EditorState.createWithContent(postState)
       : EditorState.createEmpty(),
-      editing: !!postState,
       redirect: false,
       oldTitle: ""
     }
@@ -37,14 +35,15 @@ class TextEditor extends React.Component {
       basicTextStylePlugin,
     ]
 
-    const saveTime = this.state.editorState.getCurrentContent().hasText() ? 1000 : 6000
+    const saveTime = this.state.editorState.getCurrentContent().hasText() ? 1000 : 3000
 
-    this._save = _.debounce(() => this.state.editing ? this._editPost() : this._savePost(), saveTime)
+    this._save = _.debounce(() => this.state.id ? this._editPost(this.state.id) : this._savePost(), saveTime)
   }
+
 
   componentDidMount() {
     this.focus()
-    if(this.state.editing){
+    if(this.state.id){
       const content = this.state.editorState.getCurrentContent()
       this.setState({ oldTitle: this.getTitle(content) })
     }
@@ -76,12 +75,17 @@ class TextEditor extends React.Component {
   createPost = () => {
     let post = {}
 
-    const { editorState, oldTitle } = this.state
+    const { editorState, oldTitle, id } = this.state
     const content = editorState.getCurrentContent()
     const title = this.getTitle(content)
 
+    // if(title === "<p><br></p>") return post
+
     let body = Object.assign({}, convertToRaw(content))
     body.blocks.splice(0, 1)
+
+    if(!body.blocks.length) return post
+
     let bodyHtml = stateToHTML(convertFromRaw(body))
     const newBody = bodyHtml ? bodyHtml : <br/>
 
@@ -91,19 +95,21 @@ class TextEditor extends React.Component {
     category = category ? category[0].substring(1) : "random"
 
     Object.assign(post, {
-      'title': (title ? title : ""),
+      'title': title,
       'old_post_title': oldTitle,
       'body': newBody,
       'category': category
     })
+    if(id){
+      Object.assign(post, { id })
+    }
     return post
   }
 
-  _editPost = () => {
+  _editPost = (postId) => {
 
     const post = this.createPost()
-
-    fetch('http://localhost:5000/posts/edit', {
+    fetch(`http://localhost:5000/post/${postId}`, {
       method: "put",
       headers: {
         'Accept': 'application/x-www-form-urlencoded;',
@@ -113,42 +119,48 @@ class TextEditor extends React.Component {
     })
   }
 
-  _savePost = () => {
+  _savePost = async () => {
 
     const post = this.createPost()
-    this.setState({ editing: true })
+    if(!Object.keys(post).length) return
 
-    fetch('http://localhost:5000/posts/new', {
+    fetch('http://localhost:5000/posts', {
       method: "post",
       headers: {
         'Accept': 'application/x-www-form-urlencoded;',
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: JSON.stringify(post)
-    }).catch((error) => {
-      this.setState({ editing: false })
+    })
+    .then((response) => response.json())
+    .then((result) => {
+      this.setState({ id: result.id })
+    })
+    .catch((error) => {
+      this.setState({ id: 0 })
     })
   }
 
-  deletePost = () => {
+  deletePost = (postId) => {
     const post = this.createPost()
-    fetch('http://localhost:5000/posts/delete', {
+    fetch(`http://localhost:5000/post/${postId}`, {
       method: "delete",
       headers: {
         'Accept': 'application/x-www-form-urlencoded;',
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: JSON.stringify(post)
-    }).then((response) => {
+    })
+    .then((res) => res.json())
+    .then((result) => {
       this.setState({ redirect: true})
     })
-
   }
 
   render() {
-    const { editorState } = this.state;
+    const { editorState, id, redirect } = this.state;
 
-    if(this.state.redirect){
+    if(redirect){
       window.location = "/"
     }
 
@@ -158,7 +170,7 @@ class TextEditor extends React.Component {
           <div>
             <RaisedButton label="Save"
             onClick={
-              this.state.editing ? this._editPost : this._savePost
+              !!id ? () => this._editPost(id) : this._savePost
             }/>
           </div>
           <div>
@@ -167,9 +179,13 @@ class TextEditor extends React.Component {
               onClick={() => this.setState({ redirect: true})}
             />
           </div>
-          <div>
-            <RaisedButton label="Delete" onClick={this.state.editing && this.deletePost}/>
-          </div>
+          {
+            !!id && (
+              <div>
+                <RaisedButton label="Delete" onClick={() => this.deletePost(id)}/>
+              </div>
+            )
+          }
         </div>
         <div className="editor" onClick={this.focus}>
           <Editor

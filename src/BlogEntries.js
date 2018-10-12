@@ -1,9 +1,9 @@
 import React from 'react'
 import './App.css'
 import RaisedButton from 'material-ui/RaisedButton'
-import FlatButton from 'material-ui/FlatButton'
-import { Redirect, Link } from 'react-router-dom'
-import {convertFromRaw, convertToRaw} from 'draft-js'
+//import FlatButton from 'material-ui/FlatButton'
+import { Link } from 'react-router-dom'
+//import {convertFromRaw, convertToRaw} from 'draft-js'
 
 
 class BlogEntries extends React.Component {
@@ -22,13 +22,13 @@ class BlogEntries extends React.Component {
 
   displayPosts = (posts) => {
     if(posts){
-      return posts.map((post) => {
+      return posts.map((post, i) => {
         return (
-          <div className="editor">
+          <div className="editor" key={i}>
             <div dangerouslySetInnerHTML={{ __html: post.title }} />
-            <div dangerouslySetInnerHTML={{ __html: post.body }} />          
-            { this.state.rahul ? 
-              <RaisedButton 
+            <div dangerouslySetInnerHTML={{ __html: post.body }} />
+            { this.state.rahul ?
+              <RaisedButton
                 label="Edit"
                 containerElement={
                   <Link to={{ pathname: `/edit-post/${post.id}`, state: { post: post }}}/>
@@ -37,7 +37,7 @@ class BlogEntries extends React.Component {
               : null
             }
             <hr/>
-          </div>          
+          </div>
         )
       })
     }
@@ -46,16 +46,16 @@ class BlogEntries extends React.Component {
   render() {
     return (
       <div>
-        { this.state.rahul ? 
+        { this.state.rahul ?
           <div className="button">
             <RaisedButton label="Create Post" containerElement={<Link to="/new-post"/>}/>
           </div>
           : null
         }
          <div>
-          {this.displayPosts(this.state.entries)}      
-        </div>        
-      </div>        
+          {this.displayPosts(this.state.entries)}
+        </div>
+      </div>
      )
   }
 }

@@ -31,11 +31,11 @@ const StyledToc = styled(Toc)`
 `
 
 
-const StyledLink = styled(Link)`
-  color: #228EB6;
-  cursor: pointer;
-  text-decoration: none;
-`
+// const StyledLink = styled(Link)`
+//   color: #228EB6;
+//   cursor: pointer;
+//   text-decoration: none;
+// `
 
 class Main extends Component {
 
@@ -65,7 +65,7 @@ class Main extends Component {
     fetch('http://localhost:5000/posts')
       .then((res) => res.json())
       .then((response) => {
-      this.setState({ 
+      this.setState({
         entries: response,
         category_entries: response
       });
@@ -73,7 +73,7 @@ class Main extends Component {
     })
   }
 
-  /* TODO: 
+  /* TODO:
 
     - create a private view for sharing on twitter
       - move all the stuff currently in App.js to a seperate component
@@ -95,7 +95,7 @@ class Main extends Component {
       - click on the title of an individual post to just view that post
       - organize backend to models, routes, and app
       - undo a link
-      - provide a hover thing for links      
+      - provide a hover thing for links
 
     categories:
           "Economics", "New Music", "Philosophy", "Random"
@@ -124,8 +124,8 @@ class Main extends Component {
         const posts = this.state.entries.filter((entry) => entry.category === categories[i])
         //console.log(`these are the posts for ${categories[i]}`, posts)
         menuItems.push(
-          (<MenuItem primaryText={`${categories[i]}`} 
-                    onClick={() => this.handleOpenCategory(posts)} 
+          (<MenuItem primaryText={`${categories[i]}`}
+                    onClick={() => this.handleOpenCategory(posts)}
                     containerElement={
                       <Link to={`/blog/${categories[i]}`}/>
                     }
@@ -166,7 +166,7 @@ class Main extends Component {
         <Route exact path="/" render={() => <BlogEntries entries={this.state.entries} rahul={this.state.rahul}/>}/>
         <Route path="/blog/:category" render={() => <BlogEntries entries={this.state.category_entries} rahul={this.state.rahul}/>}/>
         <Route path="/new-post" component={TextEditor}/>
-        <Route path="/edit-post/:id" component={TextEditor}/>        
+        <Route path="/edit-post/:id" component={TextEditor}/>
         </div>
       </Router>
     )

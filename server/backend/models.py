@@ -1,4 +1,3 @@
-
 from app import db
 
 # Create our database model
@@ -22,8 +21,8 @@ class Post(db.Model):
     title = db.Column(db.String(55))
     body = db.Column(db.Text())
 
-    def __init__(self, category="random", 
-                    display_date="today", 
+    def __init__(self, category="random",
+                    display_date="today",
                     title="untitled",
                     body=""):
         self.body = body
@@ -32,5 +31,4 @@ class Post(db.Model):
         self.display_date = display_date
 
     def __repr__(self):
-        return '<Post %r>' % (self.title)
-
+        return '<Post %r %r %r>' % (self.title, self.id, self.category)
