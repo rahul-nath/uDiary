@@ -2,7 +2,7 @@ from __future__ import print_function # In python 2.7
 
 from flask_restful import Resource, Api, fields, marshal_with
 from flask import Flask, render_template, request
-
+from datetime import datetime as dt
 import sys
 from flask_cors import CORS, cross_origin
 from flask.json import jsonify
@@ -35,7 +35,7 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     category = db.Column(db.String(120))
     display_date = db.Column(db.String(55))
-    date_added = db.Column(db.Date())
+    date_added = db.Column(db.DateTime, nullable=False)
     title = db.Column(db.String(55))
     body = db.Column(db.Text())
 
@@ -47,9 +47,11 @@ class Post(db.Model):
         self.title = title
         self.category = category
         self.display_date = display_date
+        self.date_added = dt.now()
 
     def __repr__(self):
-        return '<Post %r %r %r>' % (self.title, self.id, self.category)
+        return 'Title: %r ID: %r Category: %r date added: %r body: %r' % \
+                (self.title, self.id, self.category, self.date_added, self.body)
 
 # post = {
 #     'id': fields.Integer,
@@ -85,7 +87,8 @@ class PostList(Resource):
                 "id": post.id,
                 "title": post.title,
                 "body": post.body,
-                "category": post.category
+                "category": post.category,
+                "date_added": post.date_added
             })
         return jsonify(response_list)
 

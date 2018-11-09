@@ -94,6 +94,14 @@ class TextEditor extends React.Component {
     console.log("this is test category", category)
     category = category ? category[0].substring(1) : "random"
 
+    // const reg = /#[\w-]+(?:\s+#[\w-]+)*/
+    // let categories = reg.exec(bodyHtml)
+    // if(categories.length){
+    //   categories = categories[0].replace(' ', '').split('#')
+    // }
+    // categories = categories.length ? categories : ["random"]
+    // categories = categories.filter((category) => category)
+
     Object.assign(post, {
       'title': title,
       'old_post_title': oldTitle,

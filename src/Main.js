@@ -1,12 +1,14 @@
 import React, { Component } from 'react'
 import { BrowserRouter as Router, Link, Route } from 'react-router-dom'
 import AppBar from 'material-ui/AppBar'
+import Toolbar from 'material-ui/Toolbar'
+import MenuIcon from 'material-ui-icons/Menu'
+import IconButton from 'material-ui/IconButton'
 import Drawer from 'material-ui/Drawer'
 import Divider from 'material-ui/Divider'
 import MenuItem from 'material-ui/MenuItem'
 import './App.css'
 import ArrowDropRight from 'material-ui/svg-icons/navigation-arrow-drop-right'
-import Toc from 'material-ui/svg-icons/action/toc'
 import styled from 'styled-components'
 import TextEditor from './TextEditor'
 import BlogEntries from './BlogEntries'
@@ -17,18 +19,25 @@ const titleStyle = {
   'textAlign': 'center',
   'fontFamily': 'Palatino',
   'fontSize': 25,
-  'marginTop': '-0.3cm'
 }
 
-const appBarStyle = {
+const toolBarStyle = {
   'background': 'white',
-  'height': 40
+  'padding': 0
 }
 
-const StyledToc = styled(Toc)`
-  height: 60;
-  width: 60;
-`
+const menuStyle = {
+  root: {
+     flexGrow: 1,
+   },
+   grow: {
+     flexGrow: 1,
+   },
+   menuButton: {
+     marginLeft: -12,
+     marginRight: 20,
+   },
+}
 
 
 // const StyledLink = styled(Link)`
@@ -104,6 +113,7 @@ class Main extends Component {
 
 
   handleOpen = () => this.setState({ open: !this.state.open})
+  // handleClose = () => this.setState({ open: false})
 
   handleOpenCategory = (posts) => {
     this.handleOpen()
@@ -139,34 +149,50 @@ class Main extends Component {
   render() {
     return (
       <Router>
-        <div>
-        <AppBar
-          title="the new work times"
-          iconElementLeft={<StyledToc/>}
-          titleStyle={titleStyle}
-          style={appBarStyle}
-          onClick={this.handleOpen}/>
-
-        <Drawer
-          open={this.state.open}
-        >
-
-          <MenuItem
-            primaryText="blog"
-            rightIcon={<ArrowDropRight />}
-            menuItems={this.listCategories()}
-          />
-          <Divider />
-          <MenuItem>poems</MenuItem>
-          <Divider />
-          <MenuItem>ideas</MenuItem>
-          <Divider />
-          <MenuItem>music</MenuItem>
-        </Drawer>
-        <Route exact path="/" render={() => <BlogEntries entries={this.state.entries} rahul={this.state.rahul}/>}/>
-        <Route path="/blog/:category" render={() => <BlogEntries entries={this.state.category_entries} rahul={this.state.rahul}/>}/>
-        <Route path="/new-post" component={TextEditor}/>
-        <Route path="/edit-post/:id" component={TextEditor}/>
+        <div className="mb5 bg--white">
+          <AppBar
+            title="urDiary"
+            titleStyle={titleStyle}
+            onClick={this.handleOpen}
+            style={{
+              'background': 'white'
+            }}
+          >
+            <Toolbar
+              style={{
+                'background': 'white',
+                'position': 'absolute',
+                'padding': 0,
+                'margin': 0,
+                'top': 8
+              }}
+            >
+              <IconButton
+                aria-label="Menu"
+              >
+                <MenuIcon/>
+              </IconButton>
+            </Toolbar>
+          </AppBar>
+          <Drawer
+            open={this.state.open}
+          >
+            <MenuItem
+              primaryText="blog"
+              rightIcon={<ArrowDropRight />}
+              menuItems={this.listCategories()}
+            />
+            <Divider />
+            <MenuItem>poems</MenuItem>
+            <Divider />
+            <MenuItem>ideas</MenuItem>
+            <Divider />
+            <MenuItem>music</MenuItem>
+          </Drawer>
+          <Route exact path="/" render={() => <BlogEntries entries={this.state.entries} rahul={this.state.rahul}/>}/>
+          <Route path="/blog/:category" render={() => <BlogEntries entries={this.state.category_entries} rahul={this.state.rahul}/>}/>
+          <Route path="/new-post" component={TextEditor}/>
+          <Route path="/edit-post/:id" component={TextEditor}/>
         </div>
       </Router>
     )
