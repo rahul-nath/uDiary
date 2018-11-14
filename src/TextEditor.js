@@ -8,6 +8,16 @@ import Editor from 'draft-js-plugins-editor'
 import basicTextStylePlugin from './plugins/basicTextStylePlugin'
 import addLinkPlugin from './plugins/addLinkPlugin'
 import RaisedButton from 'material-ui/RaisedButton'
+// import DialogTitle from 'material-ui/DialogTitle';
+// import DialogContent from 'material-ui/DialogContent';
+// import DialogActions from 'material-ui/DialogActions';
+// import Dialog from 'material-ui//Dialog';
+
+// import Button from '@material-ui/core/Button';
+// import DialogTitle from '@material-ui/core/DialogTitle';
+// import DialogContent from '@material-ui/core/DialogContent';
+// import DialogActions from '@material-ui/core/DialogActions';
+// import Dialog from '@material-ui/core/Dialog';
 import { stateToHTML } from 'draft-js-export-html'
 import { stateFromHTML } from 'draft-js-import-html'
 
@@ -27,7 +37,8 @@ class TextEditor extends React.Component {
       ? EditorState.createWithContent(postState)
       : EditorState.createEmpty(),
       redirect: false,
-      oldTitle: ""
+      oldTitle: "",
+      showDeleteModal: false
     }
 
     this.plugins = [
@@ -161,9 +172,35 @@ class TextEditor extends React.Component {
     })
     .then((res) => res.json())
     .then((result) => {
-      this.setState({ redirect: true})
+      this.setState({
+        redirect: true,
+        showDeleteModal: !this.state.showDeleteModal
+      })
     })
   }
+
+  // {
+  //   this.state.showDeleteModal && (
+  //     <Dialog
+  //        disableBackdropClick
+  //        disableEscapeKeyDown
+  //        maxWidth="xs"
+  //        aria-labelledby="confirmation-dialog-title"
+  //      >
+  //        <DialogTitle id="confirmation-dialog-title">Really? Delete Post?</DialogTitle>
+  //        <DialogActions>
+  //          <RaisedButton onClick={this.handleDeleteModal} color="primary">
+  //            Cancel
+  //          </RaisedButton>
+  //          <RaisedButton onClick={() => this.deletePost(id)} color="primary">
+  //            Ok
+  //          </RaisedButton>
+  //        </DialogActions>
+  //      </Dialog>
+  //   )
+  // }
+  //
+  // handleDeleteModal = () => this.setState({ showDeleteModal: !this.state.showDeleteModal })
 
   render() {
     const { editorState, id, redirect } = this.state;
@@ -174,6 +211,13 @@ class TextEditor extends React.Component {
 
     return (
       <div>
+        {
+          !!id && (
+            <div>
+              <RaisedButton label="Delete" onClick={() => this.deletePost(id)}/>
+            </div>
+          )
+        }
         <div className="button">
           <div>
             <RaisedButton label="Save"
@@ -187,13 +231,6 @@ class TextEditor extends React.Component {
               onClick={() => this.setState({ redirect: true})}
             />
           </div>
-          {
-            !!id && (
-              <div>
-                <RaisedButton label="Delete" onClick={() => this.deletePost(id)}/>
-              </div>
-            )
-          }
         </div>
         <div className="editor" onClick={this.focus}>
           <Editor
