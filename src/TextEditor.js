@@ -200,11 +200,13 @@ class TextEditor extends React.Component {
   //   )
   // }
   //
-  // handleDeleteModal = () => this.setState({ showDeleteModal: !this.state.showDeleteModal })
+
+  handleDeleteModal = () => this.setState({ showDeleteModal: !this.state.showDeleteModal })
 
   render() {
     const { editorState, id, redirect } = this.state;
 
+    // TODO: use something safer here
     if(redirect){
       window.location = "/"
     }
@@ -213,8 +215,17 @@ class TextEditor extends React.Component {
       <div>
         {
           !!id && (
-            <div>
-              <RaisedButton label="Delete" onClick={() => this.deletePost(id)}/>
+            <div className="delete-button">
+              <RaisedButton label="Delete" onClick={this.handleDeleteModal}/>
+            </div>
+          )
+        }
+        {
+          this.state.showDeleteModal && (
+            <div className="modal">
+              <p>Really? Delete this?</p>
+              <RaisedButton className="modal-buttons" label="Ok" onClick={() => this.deletePost(id)}/>
+              <RaisedButton label="Cancel" onClick={this.handleDeleteModal}/>
             </div>
           )
         }
