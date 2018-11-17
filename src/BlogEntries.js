@@ -20,28 +20,26 @@ class BlogEntries extends React.Component {
     this.setState({ entries: (newProps.entries ? newProps.entries : [])})
   }
 
-  displayPosts = (posts) => {
-    if(posts){
-      return posts.map((post, i) => {
-        return (
-          <div className="editor" key={i}>
-            <div dangerouslySetInnerHTML={{ __html: post.title }} />
-            <div dangerouslySetInnerHTML={{ __html: post.body }} />
-            { this.state.rahul ?
-              <RaisedButton
-                label="Edit"
-                containerElement={
-                  <Link to={{ pathname: `/edit-post/${post.id}`, state: { post: post }}}/>
-                }
-              />
-              : null
+  displayPosts = (posts) => posts && posts.map((post, i) => {
+    const newBody = post.body.split('<p><br></p>').join(' ')
+    return (
+      <div className="editor" key={i}>
+        <div dangerouslySetInnerHTML={{ __html: post.title }} />
+        <div dangerouslySetInnerHTML={{ __html: newBody }} />
+        { this.state.rahul ?
+          <RaisedButton
+            label="Edit"
+            containerElement={
+              <Link to={{ pathname: `/edit-post/${post.id}`, state: { post: post }}}/>
             }
-            <hr/>
-          </div>
-        )
-      })
-    }
-  }
+          />
+          : null
+        }
+        <hr/>
+      </div>
+    )
+  })
+
 
   render() {
     return (
