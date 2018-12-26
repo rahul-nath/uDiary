@@ -7,6 +7,7 @@ import sys
 from flask_cors import CORS, cross_origin
 from flask.json import jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import json
 import datetime
 
@@ -17,6 +18,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/local_blog'
 db = SQLAlchemy(app)
 api = Api(app)
+migrate = Migrate(app, db)
 
 # Create our database model
 class User(db.Model):
@@ -33,6 +35,7 @@ class User(db.Model):
 class Post(db.Model):
     __tablename__ = "posts"
     id = db.Column(db.Integer, primary_key=True)
+    favorite = db.Column(db.Boolean)
     category = db.Column(db.String(120))
     display_date = db.Column(db.String(55))
     date_added = db.Column(db.DateTime, nullable=False)
@@ -42,12 +45,14 @@ class Post(db.Model):
     def __init__(self, category="random",
                     display_date="today",
                     title="untitled",
+                    favorite=False,
                     body=""):
         self.body = body
         self.title = title
         self.category = category
         self.display_date = display_date
         self.date_added = dt.now()
+        self.favorite = favorite
 
     def __repr__(self):
         return 'Title: %r ID: %r Category: %r date added: %r body: %r' % \
@@ -111,6 +116,7 @@ class PostDetail(Resource):
             old_post.title = post["title"]
         old_post.body = post["body"]
         old_post.category = post["category"]
+        old_post.favorite = post["favorite"]
         db.session.commit()
         return "true"
 
@@ -122,10 +128,26 @@ class PostDetail(Resource):
         db.session.commit()
         return "true"
 
+class FavoritePosts(Resource):
+
+    def get(self):
+        posts = Post.query.filter_by(favorite=True).order_by(Post.date_added.desc()).all()
+        response_list = []
+        for post in posts:
+            response_list.append({
+                "id": post.id,
+                "title": post.title,
+                "body": post.body,
+                "category": post.category,
+                "date_added": post.date_added
+            })
+        return jsonify(response_list)
+
 api.add_resource(Home, '/')
 api.add_resource(Login, '/login')
 api.add_resource(PostList, '/posts')
 api.add_resource(PostDetail, '/post/<string:post_id>')
+api.add_resource(FavoritePosts, '/posts/favorites')
 
 
 if __name__ == '__main__':

@@ -5,11 +5,8 @@ import Toolbar from 'material-ui/Toolbar'
 import MenuIcon from 'material-ui-icons/Menu'
 import IconButton from 'material-ui/IconButton'
 import Drawer from 'material-ui/Drawer'
-import Divider from 'material-ui/Divider'
 import MenuItem from 'material-ui/MenuItem'
 import './App.css'
-import ArrowDropRight from 'material-ui/svg-icons/navigation-arrow-drop-right'
-import styled from 'styled-components'
 import TextEditor from './TextEditor'
 import BlogEntries from './BlogEntries'
 
@@ -21,23 +18,19 @@ const titleStyle = {
   'fontSize': 25,
 }
 
-const toolBarStyle = {
-  'background': 'white',
-  'padding': 0
-}
 
-const menuStyle = {
-  root: {
-     flexGrow: 1,
-   },
-   grow: {
-     flexGrow: 1,
-   },
-   menuButton: {
-     marginLeft: -12,
-     marginRight: 20,
-   },
-}
+// const menuStyle = {
+//   root: {
+//      flexGrow: 1,
+//    },
+//    grow: {
+//      flexGrow: 1,
+//    },
+//    menuButton: {
+//      marginLeft: -12,
+//      marginRight: 20,
+//    },
+// }
 
 
 // const StyledLink = styled(Link)`
@@ -55,6 +48,7 @@ class Main extends Component {
       open: false,
       entries: [],
       category_entries: [],
+      favorite_entries: [],
       rahul: rahul
     }
   }
@@ -62,6 +56,7 @@ class Main extends Component {
   componentDidMount() {
     // get the entries from the API
     this.getEntries()
+    this.getFavoriteEntries()
   }
 
   componentWillReceiveProps(nextProps){
@@ -74,13 +69,24 @@ class Main extends Component {
     fetch('http://localhost:5000/posts')
       .then((res) => res.json())
       .then((response) => {
-      this.setState({
-        entries: response,
-        category_entries: response
-      });
-      console.log("successfully retrieved blog entries")
-    })
+        this.setState({
+          entries: response,
+          category_entries: response
+        });
+        console.log("successfully retrieved blog entries")
+      })
   }
+
+  getFavoriteEntries = () => {
+    fetch('http://localhost:5000/posts/favorites')
+      .then((res) => res.json())
+      .then((response) => {
+        this.setState({
+          favorite_entries: response
+        })
+      })
+  }
+
 
   /* TODO:
 
@@ -124,24 +130,24 @@ class Main extends Component {
 
   listCategories = () => {
     // might need to fetch the posts here in order to get the categories
-    let menuItems = [<MenuItem primaryText="all" onClick={this.handleOpen} containerElement={<Link to="/"/>}/>]
-    let entries = this.state.entries
-    if(entries){
+    let menuItems = [<MenuItem primaryText="highlights" key="first" onClick={this.handleOpen} containerElement={<Link to="/"/>}/>]
+    const { entries } = this.state
+    if(entries.length){
       // collect categories
-      let dup_cats = entries.map((entry) => { return entry.category })
-      const categories = dup_cats.filter((v, i, a) => a.indexOf(v) === i)
+      let all_cats = entries.map((entry) => entry.category )
+      const categories = all_cats.filter((v, i, a) => a.indexOf(v) === i)
       for(let i = 0; i < categories.length; i++){
-        const posts = this.state.entries.filter((entry) => entry.category === categories[i])
-        //console.log(`these are the posts for ${categories[i]}`, posts)
-        menuItems.push(
-          (<MenuItem primaryText={`${categories[i]}`}
-                    onClick={() => this.handleOpenCategory(posts)}
-                    containerElement={
-                      <Link to={`/blog/${categories[i]}`}/>
-                    }
-          />)
-        )
-      }
+        const posts = entries.filter((entry) => entry.category === categories[i])
+        menuItems.push((
+            <MenuItem
+            primaryText={`${categories[i]}`}
+            key={i.toString()}
+            onClick={() => this.handleOpenCategory(posts)}
+            containerElement={
+              <Link to={`/blog/${categories[i]}`}/>
+            }
+          />
+        ))}
       return menuItems
     }
   }
@@ -177,19 +183,9 @@ class Main extends Component {
           <Drawer
             open={this.state.open}
           >
-            <MenuItem
-              primaryText="blog"
-              rightIcon={<ArrowDropRight />}
-              menuItems={this.listCategories()}
-            />
-            <Divider />
-            <MenuItem>poems</MenuItem>
-            <Divider />
-            <MenuItem>ideas</MenuItem>
-            <Divider />
-            <MenuItem>music</MenuItem>
+            {this.listCategories()}
           </Drawer>
-          <Route exact path="/" render={() => <BlogEntries entries={this.state.entries} rahul={this.state.rahul}/>}/>
+          <Route exact path="/" render={() => <BlogEntries entries={this.state.favorite_entries} rahul={this.state.rahul}/>}/>
           <Route path="/blog/:category" render={() => <BlogEntries entries={this.state.category_entries} rahul={this.state.rahul}/>}/>
           <Route path="/new-post" component={TextEditor}/>
           <Route path="/edit-post/:id" component={TextEditor}/>

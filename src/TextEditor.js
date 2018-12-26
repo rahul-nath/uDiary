@@ -101,9 +101,14 @@ class TextEditor extends React.Component {
     const newBody = bodyHtml ? bodyHtml : <br/>
 
     const reg = /#(\w+)/
-    let category = reg.exec(bodyHtml)
-    console.log("this is test category", category)
-    category = category ? category[0].substring(1) : "random"
+    const fav_regex = /(\*\*\*)/
+
+    let fav = fav_regex.exec(bodyHtml)
+    const cat = reg.exec(bodyHtml)
+    console.log("this is test category", cat)
+
+    const category = cat ? cat[0].substring(1) : "random"
+    const favorite = !!fav
 
     // const reg = /#[\w-]+(?:\s+#[\w-]+)*/
     // let categories = reg.exec(bodyHtml)
@@ -117,7 +122,8 @@ class TextEditor extends React.Component {
       'title': title,
       'old_post_title': oldTitle,
       'body': newBody,
-      'category': category
+      'category': category,
+      'favorite': favorite
     })
     if(id){
       Object.assign(post, { id })
