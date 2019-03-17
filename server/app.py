@@ -58,13 +58,8 @@ class Post(db.Model):
         return 'Title: %r ID: %r Category: %r date added: %r body: %r' % \
                 (self.title, self.id, self.category, self.date_added, self.body)
 
-# post = {
-#     'id': fields.Integer,
-#     'vendor': fields.String,
-#     'tracking_number': fields.String,
-#     'pods_list': fields.List(fields.Integer),
-#     'pelican_cases_list': fields.List(fields.Integer),
-#     'gateways_list': fields.List(fields.Integer)
+# post_field = {
+#     'id': fields.Integer
 # }
 
 class Home(Resource):
@@ -97,7 +92,7 @@ class PostList(Resource):
             })
         return jsonify(response_list)
 
-    # @marshal_with()
+    # @marshal_with(post)
     def post(self):
         post = json.loads(request.get_data())
         new_post = Post(title=post["title"], body=post["body"], category=post["category"])
@@ -117,6 +112,8 @@ class PostDetail(Resource):
         old_post.body = post["body"]
         old_post.category = post["category"]
         old_post.favorite = post["favorite"]
+        db.session.add(old_post)
+        db.session.flush()
         db.session.commit()
         return "true"
 
