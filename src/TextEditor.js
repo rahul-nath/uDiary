@@ -8,16 +8,6 @@ import Editor from 'draft-js-plugins-editor'
 import basicTextStylePlugin from './plugins/basicTextStylePlugin'
 import addLinkPlugin from './plugins/addLinkPlugin'
 import RaisedButton from 'material-ui/RaisedButton'
-// import DialogTitle from 'material-ui/DialogTitle';
-// import DialogContent from 'material-ui/DialogContent';
-// import DialogActions from 'material-ui/DialogActions';
-// import Dialog from 'material-ui//Dialog';
-
-// import Button from '@material-ui/core/Button';
-// import DialogTitle from '@material-ui/core/DialogTitle';
-// import DialogContent from '@material-ui/core/DialogContent';
-// import DialogActions from '@material-ui/core/DialogActions';
-// import Dialog from '@material-ui/core/Dialog';
 import { stateToHTML } from 'draft-js-export-html'
 import { stateFromHTML } from 'draft-js-import-html'
 
@@ -31,14 +21,16 @@ class TextEditor extends React.Component {
     if(post){
       postState = stateFromHTML(post.title + post.body)
     }
+    const newState = EditorState.createEmpty()
     this.state = {
       id: id ? id : 0,
       editorState: postState
       ? EditorState.createWithContent(postState)
-      : EditorState.createEmpty(),
+      : EditorState.moveFocusToEnd(newState),
       redirect: false,
       oldTitle: "",
-      showDeleteModal: false
+      showDeleteModal: false,
+      changesExist: false
     }
 
     this.plugins = [
@@ -53,7 +45,6 @@ class TextEditor extends React.Component {
 
 
   componentDidMount() {
-    this.focus()
     if(this.state.id){
       const content = this.state.editorState.getCurrentContent()
       this.setState({ oldTitle: this.getTitle(content) })
@@ -105,7 +96,6 @@ class TextEditor extends React.Component {
 
     let fav = fav_regex.exec(bodyHtml)
     const cat = reg.exec(bodyHtml)
-    console.log("this is test category", cat)
 
     const category = cat ? cat[0].substring(1) : "random"
     const favorite = !!fav
@@ -159,12 +149,14 @@ class TextEditor extends React.Component {
     })
     .then((response) => response.json())
     .then((result) => {
-      this.setState({ id: result.id })
+      this.state.changesExist ? this.setState({ redirect: true }) : this.setState({ id: result.id })
     })
     .catch((error) => {
       this.setState({ id: 0 })
     })
   }
+
+
 
   deletePost = (postId) => {
     const post = this.createPost()
@@ -185,32 +177,26 @@ class TextEditor extends React.Component {
     })
   }
 
-  // {
-  //   this.state.showDeleteModal && (
-  //     <Dialog
-  //        disableBackdropClick
-  //        disableEscapeKeyDown
-  //        maxWidth="xs"
-  //        aria-labelledby="confirmation-dialog-title"
-  //      >
-  //        <DialogTitle id="confirmation-dialog-title">Really? Delete Post?</DialogTitle>
-  //        <DialogActions>
-  //          <RaisedButton onClick={this.handleDeleteModal} color="primary">
-  //            Cancel
-  //          </RaisedButton>
-  //          <RaisedButton onClick={() => this.deletePost(id)} color="primary">
-  //            Ok
-  //          </RaisedButton>
-  //        </DialogActions>
-  //      </Dialog>
-  //   )
-  // }
-  //
+  // TODO: add key bindings for "shift+return" to save
+  // https://draftjs.org/docs/advanced-topics-key-bindings
+  // https://css-tricks.com/snippets/javascript/javascript-keycodes/
+  handleSave = (id) => !!id ? this._editPost(id) : this._savePost()
 
   handleDeleteModal = () => this.setState({ showDeleteModal: !this.state.showDeleteModal })
 
+  handleBackModal = () => {
+    if(this.state.editorState.getCurrentContent().hasText()){
+      this.setState({ changesExist: !this.state.changesExist })
+    } else {
+      this.setState({ redirect: true })
+    }
+  }
+
+
+  handleBack = (save) => save ? this.handleSave(this.state.id) : this.setState({ redirect: true })
+
   render() {
-    const { editorState, id, redirect } = this.state;
+    const { editorState, id, redirect, showDeleteModal, changesExist } = this.state;
 
     // TODO: use something safer here
     if(redirect){
@@ -227,8 +213,8 @@ class TextEditor extends React.Component {
           )
         }
         {
-          this.state.showDeleteModal && (
-            <div className="modal">
+          showDeleteModal && (
+            <div className="modal mb5">
               <p>Really? Delete this?</p>
               <RaisedButton className="modal-buttons" label="Ok" onClick={() => this.deletePost(id)}/>
               <RaisedButton label="Cancel" onClick={this.handleDeleteModal}/>
@@ -238,16 +224,23 @@ class TextEditor extends React.Component {
         <div className="button">
           <div>
             <RaisedButton label="Save"
-            onClick={
-              !!id ? () => this._editPost(id) : this._savePost
-            }/>
+            onClick={() => this.handleSave(id)}/>
           </div>
           <div>
             <RaisedButton
               label="Back"
-              onClick={() => this.setState({ redirect: true})}
+              onClick={this.handleBackModal}
             />
           </div>
+          {
+            changesExist && (
+              <div className="modal mb5">
+                <p>Don't you want to save your changes?</p>
+                <RaisedButton className="modal-buttons" label="Yes!" onClick={() => this.handleBack("save")}/>
+                <RaisedButton label="Lol no." onClick={() => this.handleBack()}/>
+              </div>
+            )
+          }
         </div>
         <div className="editor" onClick={this.focus}>
           <Editor

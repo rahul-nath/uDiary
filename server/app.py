@@ -95,7 +95,10 @@ class PostList(Resource):
     # @marshal_with(post)
     def post(self):
         post = json.loads(request.get_data())
-        new_post = Post(title=post["title"], body=post["body"], category=post["category"])
+        new_post = Post(title=post["title"],
+                        body=post["body"],
+                        category=post["category"], 
+                        favorite=post["favorite"])
         db.session.add(new_post)
         db.session.flush()
         db.session.commit()
