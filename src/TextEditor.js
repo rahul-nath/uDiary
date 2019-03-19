@@ -33,6 +33,9 @@ class TextEditor extends React.Component {
       changesExist: false
     }
 
+    // truly truly truly fuck this cursor problem
+    // https://stackoverflow.com/questions/43868815/how-to-stop-draftjs-cursor-jumping-to-beginning-of-text
+
     this.plugins = [
       addLinkPlugin,
       basicTextStylePlugin,
@@ -61,8 +64,8 @@ class TextEditor extends React.Component {
   onChange = (editorState) => {
     if (editorState.getDecorator() !== null) {
       this.setState({
-        editorState,
-      });
+        editorState
+      })
 
       if(editorState.getCurrentContent().hasText()){
         this._save()
@@ -81,8 +84,6 @@ class TextEditor extends React.Component {
     const content = editorState.getCurrentContent()
     const title = this.getTitle(content)
 
-    // if(title === "<p><br></p>") return post
-
     let body = Object.assign({}, convertToRaw(content))
     body.blocks.splice(0, 1)
 
@@ -99,14 +100,6 @@ class TextEditor extends React.Component {
 
     const category = cat ? cat[0].substring(1) : "random"
     const favorite = !!fav
-
-    // const reg = /#[\w-]+(?:\s+#[\w-]+)*/
-    // let categories = reg.exec(bodyHtml)
-    // if(categories.length){
-    //   categories = categories[0].replace(' ', '').split('#')
-    // }
-    // categories = categories.length ? categories : ["random"]
-    // categories = categories.filter((category) => category)
 
     Object.assign(post, {
       'title': title,
