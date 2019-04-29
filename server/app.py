@@ -72,7 +72,7 @@ class Login(Resource):
 
     def post():
         login = json.loads(request.get_data())
-        if login["password"] == "thatfuckinfool?heded":
+        if login["password"] == "thatfool?heded":
             return jsonify({"rahul": "true"})
         else:
             return jsonify({"rahul": ""})
@@ -97,7 +97,7 @@ class PostList(Resource):
         post = json.loads(request.get_data())
         new_post = Post(title=post["title"],
                         body=post["body"],
-                        category=post["category"], 
+                        category=post["category"],
                         favorite=post["favorite"])
         db.session.add(new_post)
         db.session.flush()

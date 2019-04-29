@@ -33,7 +33,7 @@ class TextEditor extends React.Component {
       changesExist: false
     }
 
-    // truly truly truly fuck this cursor problem
+    // this cursor problem smh
     // https://stackoverflow.com/questions/43868815/how-to-stop-draftjs-cursor-jumping-to-beginning-of-text
 
     this.plugins = [
