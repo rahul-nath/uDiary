@@ -42,7 +42,9 @@ class TextEditor extends React.Component {
     ]
 
     const saveTime = this.state.editorState.getCurrentContent().hasText() ? 1000 : 3000
-
+    // The debounce function delays the processing of the keyup event until the user
+    // has stopped typing for a predetermined amount of time.
+    // This prevents your UI code from needing to process every event
     this._save = _.debounce(() => this.state.id ? this._editPost(this.state.id) : this._savePost(), saveTime)
   }
 
@@ -186,7 +188,13 @@ class TextEditor extends React.Component {
   }
 
 
-  handleBack = (save) => save ? this.handleSave(this.state.id) : this.setState({ redirect: true })
+  handleBack = (save) => {
+    if(save){
+      this.handleSave(this.state.id)
+    }
+    this.setState({ redirect: true })
+  }
+
 
   render() {
     const { editorState, id, redirect, showDeleteModal, changesExist } = this.state;
