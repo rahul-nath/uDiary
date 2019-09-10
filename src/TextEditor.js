@@ -14,19 +14,14 @@ import { stateFromHTML } from 'draft-js-import-html'
 class TextEditor extends React.Component {
   constructor(props) {
     super(props)
-
-    const post = this.props.location.state ? this.props.location.state.post : null
-    const { id } = this.props.match.params
-    let postState
-    if(post){
-      postState = stateFromHTML(post.title + post.body)
-    }
-    const newState = EditorState.createEmpty()
+    const { location, match } = this.props
+    const post = location.state ? location.state.post : null
+    const { id } = match.params
     this.state = {
       id: id ? id : 0,
-      editorState: postState
-      ? EditorState.createWithContent(postState)
-      : EditorState.moveFocusToEnd(newState),
+      editorState: post
+        ? EditorState.createWithContent(stateFromHTML(post.title + post.body))
+        : EditorState.moveFocusToEnd(EditorState.createEmpty()),
       redirect: false,
       oldTitle: "",
       showDeleteModal: false,
@@ -58,13 +53,14 @@ class TextEditor extends React.Component {
 
   getTitle = (content) => {
     let title = Object.assign({}, convertToRaw(content))
+    // TODO: is splice in-place?
     title.blocks.splice(1, title.blocks.length-1)
     let title_html = stateToHTML(convertFromRaw(title))
     return title_html
   }
 
   onChange = (editorState) => {
-    if (editorState.getDecorator() !== null) {
+    if (editorState.getDecorator()) {
       this.setState({
         editorState
       })
@@ -73,10 +69,6 @@ class TextEditor extends React.Component {
         this._save()
       }
     }
-  }
-
-  focus = () => {
-    this.editor.focus()
   }
 
   createPost = () => {
@@ -181,7 +173,7 @@ class TextEditor extends React.Component {
 
   handleBackModal = () => {
     if(this.state.editorState.getCurrentContent().hasText()){
-      this.setState({ changesExist: !this.state.changesExist })
+      this.setState({ changesExist: true })
     } else {
       this.setState({ redirect: true })
     }
@@ -195,6 +187,7 @@ class TextEditor extends React.Component {
     this.setState({ redirect: true })
   }
 
+  handleStay = () => this.setState({ showDeleteModal: false, changesExist: false })
 
   render() {
     const { editorState, id, redirect, showDeleteModal, changesExist } = this.state;
@@ -223,27 +216,23 @@ class TextEditor extends React.Component {
           )
         }
         <div className="button">
-          <div>
-            <RaisedButton label="Save"
-            onClick={() => this.handleSave(id)}/>
-          </div>
-          <div>
-            <RaisedButton
-              label="Back"
-              onClick={this.handleBackModal}
-            />
-          </div>
           {
-            changesExist && (
-              <div className="modal mb5">
+            changesExist ? (
+              <div className="modal mb5 db">
                 <p>Don't you want to save your changes?</p>
                 <RaisedButton className="modal-buttons" label="Yes!" onClick={() => this.handleBack("save")}/>
-                <RaisedButton label="Lol no." onClick={() => this.handleBack()}/>
+                <RaisedButton className="modal-buttons" label="Lol no." onClick={() => this.handleBack(null)}/>
+                <RaisedButton label="Keep me here" onClick={this.handleStay}/>
               </div>
+            ) : (
+              <RaisedButton
+                label="Back"
+                onClick={this.handleBackModal}
+              />
             )
           }
         </div>
-        <div className="editor" onClick={this.focus}>
+        <div className="editor" onClick={() => this.editor.focus()}>
           <Editor
             editorState={editorState}
             onChange={this.onChange}
