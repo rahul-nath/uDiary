@@ -186,7 +186,16 @@ class Main extends Component {
             {this.listCategories()}
           </Drawer>
           <Route exact path="/" render={() => <BlogEntries entries={this.state.favorite_entries} rahul={this.state.rahul}/>}/>
-          <Route path="/blog/:category" render={() => <BlogEntries entries={this.state.category_entries} rahul={this.state.rahul}/>}/>
+          <Route
+            path="/blog/:category"
+            render={(props) =>
+              <BlogEntries
+                entries={this.state.category_entries}
+                rahul={this.state.rahul}
+                {...props}
+              />
+            }
+            />
           <Route path="/new-post" component={TextEditor}/>
           <Route path="/edit-post/:id" component={TextEditor}/>
         </div>

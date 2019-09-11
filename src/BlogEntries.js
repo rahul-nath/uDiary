@@ -9,10 +9,11 @@ import { Link } from 'react-router-dom'
 class BlogEntries extends React.Component {
   constructor(props) {
     super(props)
-
+    const { entries, rahul, match } = this.props
     this.state = {
-      entries: this.props.entries,
-      rahul: this.props.rahul
+      entries: entries,
+      rahul: rahul,
+      category: match ? match.params.category : ''
     }
   }
 
@@ -42,16 +43,20 @@ class BlogEntries extends React.Component {
 
 
   render() {
+    const { rahul, entries, category } = this.state
     return (
       <div>
-        { this.state.rahul ?
+        { rahul ?
           <div className="button">
-            <RaisedButton label="Create Post" containerElement={<Link to="/new-post"/>}/>
+            <RaisedButton
+              label="Create Post"
+              containerElement={<Link to={{ pathname: "/new-post", category }}/>}
+            />
           </div>
           : null
         }
          <div>
-          {this.displayPosts(this.state.entries)}
+          {this.displayPosts(entries)}
         </div>
       </div>
      )

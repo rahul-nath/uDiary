@@ -16,16 +16,19 @@ class TextEditor extends React.Component {
     super(props)
     const { location, match } = this.props
     const post = location.state ? location.state.post : null
+    const editorState = post
+      ? EditorState.createWithContent(stateFromHTML(post.title + post.body))
+      : (location.category
+        ? EditorState.createWithContent(stateFromHTML(`<br/><br/>#${location.category}`))
+        : EditorState.moveFocusToEnd(EditorState.createEmpty()))
     const { id } = match.params
     this.state = {
       id: id ? id : 0,
-      editorState: post
-        ? EditorState.createWithContent(stateFromHTML(post.title + post.body))
-        : EditorState.moveFocusToEnd(EditorState.createEmpty()),
       redirect: false,
       oldTitle: "",
       showDeleteModal: false,
-      changesExist: false
+      changesExist: false,
+      editorState
     }
 
     // this cursor problem smh
