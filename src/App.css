@@ -19,7 +19,7 @@
 }
 
 .editor {
-  padding: 50px;
+  padding: 10px;
   width: 600px;
   margin: 0 auto;
 }
@@ -49,6 +49,10 @@
   background-color: white;
   border-radius: 15px;
   box-shadow: 0 0 1.0px #888888;
+}
+
+.date {
+  text-align: right;
 }
 
 .modal-buttons {

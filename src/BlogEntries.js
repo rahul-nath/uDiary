@@ -1,4 +1,5 @@
 import React from 'react'
+import moment from 'moment'
 import './App.css'
 import RaisedButton from 'material-ui/RaisedButton'
 //import FlatButton from 'material-ui/FlatButton'
@@ -25,16 +26,16 @@ class BlogEntries extends React.Component {
     const newBody = post.body.split('<p><br></p>').join(' ')
     return (
       <div className="editor" key={i}>
+        <div className="date">{moment(post.date_added).format("MM/DD/YYYY")}</div>
         <div dangerouslySetInnerHTML={{ __html: post.title }} />
         <div dangerouslySetInnerHTML={{ __html: newBody }} />
-        { this.state.rahul ?
-          <RaisedButton
+        { this.state.rahul &&
+          (<RaisedButton
             label="Edit"
             containerElement={
               <Link to={{ pathname: `/edit-post/${post.id}`, state: { post: post }}}/>
             }
-          />
-          : null
+          />)
         }
         <hr/>
       </div>
@@ -46,14 +47,13 @@ class BlogEntries extends React.Component {
     const { rahul, entries, category } = this.state
     return (
       <div>
-        { rahul ?
-          <div className="button">
+        { rahul &&
+          (<div className="button">
             <RaisedButton
               label="Create Post"
               containerElement={<Link to={{ pathname: "/new-post", category }}/>}
             />
-          </div>
-          : null
+          </div>)
         }
          <div>
           {this.displayPosts(entries)}

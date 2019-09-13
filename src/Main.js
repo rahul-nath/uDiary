@@ -161,7 +161,8 @@ class Main extends Component {
             titleStyle={titleStyle}
             onClick={this.handleOpen}
             style={{
-              'background': 'white'
+              'background': 'white',
+              'marginBottom': '20px'
             }}
           >
             <Toolbar
