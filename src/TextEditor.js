@@ -23,7 +23,7 @@ class TextEditor extends React.Component {
         : EditorState.moveFocusToEnd(EditorState.createEmpty()))
     const { id } = match.params
     this.state = {
-      id: id ? id : 0,
+      id: id || 0,
       redirect: false,
       oldTitle: "",
       showDeleteModal: false,

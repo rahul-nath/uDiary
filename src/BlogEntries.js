@@ -19,7 +19,11 @@ class BlogEntries extends React.Component {
   }
 
   componentWillReceiveProps(newProps)  {
-    this.setState({ entries: (newProps.entries ? newProps.entries : [])})
+    const { entries, match } = newProps
+    this.setState({
+      entries: (entries ? entries : []),
+      category: match ? match.params.category : ''  
+    })
   }
 
   displayPosts = (posts) => posts && posts.map((post, i) => {
