@@ -16,8 +16,8 @@
     "material-ui-icons": "^1.0.0-beta.36",
     "mime": "^2.4.0",
     "moment": "^2.24.0",
-    "react": "^15.6.1",
-    "react-dom": "^15.6.1",
+    "react": "^16.10.1",
+    "react-dom": "^16.10.1",
     "react-router": "^4.4.0",
     "react-router-dom": "^4.4.0",
     "react-scripts": "1.0.13",
@@ -29,5 +29,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "eslint-plugin-react-hooks": "^2.1.1"
   }
 }

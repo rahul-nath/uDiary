@@ -1,7 +1,7 @@
 import 'draft-js/dist/Draft.css'
 import './App.css'
 import _ from 'lodash'
-import React from 'react'
+import React, { Component } from 'react'
 import { EditorState } from 'draft-js'
 import {convertFromRaw, convertToRaw} from 'draft-js'
 import Editor from 'draft-js-plugins-editor'
@@ -11,7 +11,7 @@ import RaisedButton from 'material-ui/RaisedButton'
 import { stateToHTML } from 'draft-js-export-html'
 import { stateFromHTML } from 'draft-js-import-html'
 
-class TextEditor extends React.Component {
+class TextEditor extends Component {
   constructor(props) {
     super(props)
     const { location, match } = this.props
@@ -81,29 +81,49 @@ class TextEditor extends React.Component {
     const content = editorState.getCurrentContent()
     const title = this.getTitle(content)
 
-    let body = Object.assign({}, convertToRaw(content))
-    body.blocks.splice(0, 1)
+    let oldBody = Object.assign({}, convertToRaw(content))
+    oldBody.blocks.splice(0, 1)
 
-    if(!body.blocks.length) return post
+    if(!oldBody.blocks.length) return post
 
-    let bodyHtml = stateToHTML(convertFromRaw(body))
-    const newBody = bodyHtml ? bodyHtml : <br/>
+    let bodyHtml = stateToHTML(convertFromRaw(oldBody))
+    const body = bodyHtml ? bodyHtml : <br/>
 
     const reg = /#(\w+)/
     const fav_regex = /(\*\*\*)/
-
     let fav = fav_regex.exec(bodyHtml)
     const cat = reg.exec(bodyHtml)
 
-    const category = cat ? cat[0].substring(1) : "random"
+    const category = cat ? cat[1] : "random"
     const favorite = !!fav
 
+    // side: "while arr: arr.pop()" processes arr like a stack
+    // ----: "for e in arr:" processes arr like a queue
+    const categories = []
+
+    let i = 0
+    let newCategory
+
+    while(bodyHtml.indexOf("#") > -1){
+      newCategory = reg.exec(bodyHtml)[0]
+      bodyHtml = bodyHtml.replace(newCategory, `{${i++}}`)
+      categories.push(newCategory.substring(1))
+    }
+
+    if(categories.length){
+      categories.forEach((category, j) => {
+        bodyHtml = bodyHtml.replace(`{${j}}`, `#${category}`)
+      })
+    } else{
+      categories.push("random")
+    }
+    // 'categories': categories.join(","),
     Object.assign(post, {
-      'title': title,
       'old_post_title': oldTitle,
-      'body': newBody,
-      'category': category,
-      'favorite': favorite
+      body,
+      favorite,
+      category,
+      title
     })
     if(id){
       Object.assign(post, { id })
@@ -139,7 +159,9 @@ class TextEditor extends React.Component {
     })
     .then((response) => response.json())
     .then((result) => {
-      this.state.changesExist ? this.setState({ redirect: true }) : this.setState({ id: result.id })
+      this.state.changesExist
+      ? this.setState({ redirect: true })
+      : this.setState({ id: result.id })
     })
     .catch((error) => {
       this.setState({ id: 0 })

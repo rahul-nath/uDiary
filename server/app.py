@@ -58,22 +58,6 @@ class Post(db.Model):
         return 'Title: %r ID: %r Category: %r date added: %r body: %r' % \
                 (self.title, self.id, self.category, self.date_added, self.body)
 
-# class Category(db.Model):
-#     __tablename__ = "categories"
-#     id = db.Column(db.Integer, primary_key=True)
-#     post_id = db.Column(db.Integer, foreign_key=True)
-#     name = db.Column(db.String(120))
-#     date_added = db.Column(db.DateTime, nullable=False)
-#
-#     def __init__(self, name="random"):
-#
-#         self.post_id = 0
-#         self.name = name
-#         self.date_added = dt.now()
-#
-#     def __repr__(self):
-#         return 'Title: %r ID: %r Category: %r date added: %r body: %r' % \
-#                 (self.title, self.id, self.category, self.date_added, self.body)
 
 
 class Home(Resource):
