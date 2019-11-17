@@ -21,59 +21,6 @@ api = Api(app)
 migrate = Migrate(app, db)
 
 """
-Second migration
-1) Fetch all categories, map to their ids
-2) Fetch all Posts
-3) for each post, create a row in categories_posts
-    -> get the post id, use the category_dict to get
-    -> the category id
-4) Delete the category column for posts
-
-    post_categories = sa.Table(
-        'categories_posts',
-        sa.MetaData(),
-        sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('post_id'),
-        sa.Column('category_id')
-    )
-
-    categories = sa.Table(
-        'categories',
-        sa.MetaData(),
-        sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('name')
-    )
-
-    posts = sa.Table(
-       'posts',
-       sa.MetaData(),
-       sa.Column('id', sa.Integer, primary_key=True),
-       sa.Column('category', sa.String())
-    )
-    existing_posts = connection.execute(sa.select([
-        posts.c.id,
-        posts.c.category
-    ]).order_by(posts.c.id)).fetchall()
-
-    posts_by_categories = {}
-
-    for id, category in posts:
-        if not posts_by_categories.get(category, None):
-            posts_by_categories[category] = [id]
-        else:
-            posts_by_categories[category].append(id)
-
-    category_entries = [
-        { "category": cat } for cat in posts_by_categories.keys()
-    ]
-
-    category_insert = categories.insert().\
-            values({
-                'post_id': bindparam('id'),
-                'category_id': bindparam('id')
-            })
-    connection.execute(category_insert, )
-
 Third migration:
 1) update post dates into the date_added (delete the cols in posts)
 2) update how they're returned
@@ -136,26 +83,22 @@ class PostCategory(Base):
 class Post(Base):
     __tablename__ = "posts"
     favorite = db.Column(db.Boolean)
-    category = db.Column(db.String(120))
     display_date = db.Column(db.String(55))
     date_added = db.Column(db.DateTime, nullable=False)
     title = db.Column(db.String(55))
     body = db.Column(db.Text())
 
-    def __init__(self, category="random",
-                    display_date="today",
+    def __init__(self, display_date="today",
                     title="untitled",
                     favorite=False,
                     body=""):
         self.body = body
         self.title = title
-        self.category = category
         self.favorite = favorite
 
-
     def __repr__(self):
-        return 'Title: %r ID: %r Category: %r date added: %r body: %r' % \
-                (self.title, self.id, self.category, self.date_added, self.body)
+        return 'Title: %r ID: %r date added: %r body: %r' % \
+                (self.title, self.id, self.date_added, self.body)
 
 
 class Home(Resource):
