@@ -56,7 +56,6 @@ class Main extends Component {
   componentDidMount() {
     // get the entries from the API
     this.getEntries()
-    this.getFavoriteEntries()
   }
 
   componentWillReceiveProps(nextProps){
@@ -71,22 +70,12 @@ class Main extends Component {
       .then((response) => {
         this.setState({
           entries: response,
-          category_entries: response
+          category_entries: response,
+          favorite_entries: response.filter(post => post["favorite"])
         });
         console.log("successfully retrieved blog entries")
       })
   }
-
-  getFavoriteEntries = () => {
-    fetch('http://localhost:5000/posts/favorites')
-      .then((res) => res.json())
-      .then((response) => {
-        this.setState({
-          favorite_entries: response
-        })
-      })
-  }
-
 
   /* TODO:
 
@@ -128,28 +117,40 @@ class Main extends Component {
     })
   }
 
+
+
   listCategories = () => {
     // might need to fetch the posts here in order to get the categories
     let menuItems = [<MenuItem primaryText="highlights" key="first" onClick={this.handleOpen} containerElement={<Link to="/"/>}/>]
     const { entries } = this.state
     if(entries.length){
       // collect categories
-      let all_cats = entries.map((entry) => entry.category )
-      const categories = all_cats.filter((v, i, a) => a.indexOf(v) === i)
-      for(let i = 0; i < categories.length; i++){
-        const posts = entries.filter((entry) => entry.category === categories[i])
+      const seenCategories = new Set()
+      entries.forEach((entry) => entry.categories.forEach((category) =>{
+        seenCategories.add(category.name)
+      }))
+      // const categories = seenCategories.entries()
+      console.log("?????????????????????/ categories", seenCategories)
+      seenCategories.forEach((cat) => {
+        const posts = entries.filter((entry) => entry.categories.includes(cat.name))
+        // TODO: Don't pass posts here, fetch when you navigate to the according
+        // category page
+
+        // TODO: remove the attributes and only put categories
+        // Then, fetch all the posts when the user goes to  the next page.
         menuItems.push((
             <MenuItem
-            primaryText={`${categories[i]}`}
-            key={i.toString()}
+            primaryText={`${cat.name}`}
+            key={cat.id}
             onClick={() => this.handleOpenCategory(posts)}
             containerElement={
-              <Link to={`/blog/${categories[i]}`}/>
+              <Link to={`/blog/${cat.name}`}/>
             }
           />
-        ))}
-      return menuItems
+        ))
+      })
     }
+    return menuItems
   }
 
   render() {

@@ -1,15 +1,17 @@
 from __future__ import print_function # In python 2.7
 
-from flask_restful import Resource, Api, fields, marshal_with
+from flask_restful import Resource, Api, reqparse, fields, marshal_with
 from flask import Flask, render_template, request
 from datetime import datetime as dt
 import sys
 from flask_cors import CORS, cross_origin
+from sqlalchemy.orm import joinedload
 from flask.json import jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import json
 import datetime
+import pytz
 
 
 app = Flask(__name__, static_folder='../static', template_folder='../static')
@@ -25,6 +27,26 @@ Third migration:
 1) update post dates into the date_added (delete the cols in posts)
 2) update how they're returned
 """
+class ConvertDateToISOFormat(fields.Raw):
+    def format(self, value):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=pytz.UTC)
+        return value.isoformat()
+
+category_fields = {
+    'id': fields.Integer(attribute='id'),
+    'name': fields.String(attribute='name')
+}
+
+post_fields = {
+    'id': fields.Integer,
+    'title': fields.String,
+    'body': fields.String,
+    'favorite': fields.Boolean,
+    'date_added': ConvertDateToISOFormat(attribute='date_added'),
+    'categories': fields.List(fields.Nested(category_fields)),
+}
+
 
 class Base(db.Model):
     ''' base model attributes which are added to all models '''
@@ -60,25 +82,15 @@ class User(Base):
     def __repr__(self):
         return '<E-mail %r>' % self.email
 
+
 class Category(Base):
     __tablename__ = "categories"
     name = db.Column(db.String(120), unique=True)
+    posts = db.relationship("Post", secondary="categories_posts")
 
     def __init__(self, name):
         self.name = name
 
-
-class PostCategory(Base):
-    """ This class represents an association table for Categories and Posts"""
-    __tablename__ = 'categories_posts'
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), index=True, nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), index=True, nullable=False)
-    categories = db.relationship('Category', backref=db.backref('categories'))
-    posts = db.relationship('Post', backref=db.backref('posts'))
-
-    def __init__(self, category_id=0, post_id=0):
-        self.category_id = tag_id
-        self.post_id = post_id
 
 class Post(Base):
     __tablename__ = "posts"
@@ -87,6 +99,7 @@ class Post(Base):
     date_added = db.Column(db.DateTime, nullable=False)
     title = db.Column(db.String(55))
     body = db.Column(db.Text())
+    categories = db.relationship("Category", secondary="categories_posts")
 
     def __init__(self, display_date="today",
                     title="untitled",
@@ -99,6 +112,19 @@ class Post(Base):
     def __repr__(self):
         return 'Title: %r ID: %r date added: %r body: %r' % \
                 (self.title, self.id, self.date_added, self.body)
+
+
+class PostCategory(Base):
+    """ This class represents an association table for Categories and Posts"""
+    __tablename__ = 'categories_posts'
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), index=True, nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), index=True, nullable=False)
+    categories = db.relationship(Category, backref=db.backref("category_assoc"))
+    posts = db.relationship(Post, backref=db.backref("post_assoc"))
+
+    def __init__(self, category_id=0, post_id=0):
+        self.category_id = tag_id
+        self.post_id = post_id
 
 
 class Home(Resource):
@@ -118,20 +144,13 @@ class Login(Resource):
 
 class PostList(Resource):
 
-    def get(self):
-        r = Post.query.options(joinedload('categories')).order_by(Post.date_added.desc()).all()
-        response_list = []
-        for post in r:
-            response_list.append({
-                "id": post.id,
-                "title": post.title,
-                "body": post.body,
-                "categories": post.categories,
-                "date_added": post.date_added
-            })
-        return jsonify(response_list)
+    get_parser = reqparse.RequestParser()
+    get_parser.add_argument('favorites', location='args', default=None)
 
-    # @marshal_with(post)
+    @marshal_with(post_fields)
+    def get(self):
+        return  Post.query.options(joinedload('categories')).order_by(Post.date_added.desc()).all()
+
     def post(self):
         post = json.loads(request.get_data())
         categories = post["categories"]
@@ -164,6 +183,7 @@ class PostDetail(Resource):
 
     # TODO: Create decorator for fetching posts
     # TODO: Create error code returns (such as if there's no post_id here)
+    @marshal_with(post_fields)
     def get(self, post_id):
         return Post.query.options(joinedload('categories')).filter_by(id=post_id).first()
 
@@ -244,26 +264,10 @@ class PostDetail(Resource):
 
         return "true"
 
-class FavoritePosts(Resource):
-
-    def get(self):
-        posts = Post.query.filter_by(favorite=True).order_by(Post.date_added.desc()).all()
-        response_list = []
-        for post in posts:
-            response_list.append({
-                "id": post.id,
-                "title": post.title,
-                "body": post.body,
-                "category": post.category,
-                "date_added": post.date_added
-            })
-        return jsonify(response_list)
-
 api.add_resource(Home, '/')
 api.add_resource(Login, '/login')
 api.add_resource(PostList, '/posts')
 api.add_resource(PostDetail, '/post/<string:post_id>')
-api.add_resource(FavoritePosts, '/posts/favorites')
 
 
 if __name__ == '__main__':
