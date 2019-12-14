@@ -11,12 +11,38 @@ import TextEditor from './TextEditor'
 import BlogEntries from './BlogEntries'
 
 
-const titleStyle = {
-  'color': 'black',
-  'textAlign': 'center',
-  'fontFamily': 'Palatino',
-  'fontSize': 25,
-}
+/* TODO:
+
+  TODO: refactor getEntries calls to accept an
+  endpoint adn genraliz3ed this to an actual class that does all teh fetching
+
+
+  - create a private view for sharing on twitter
+    - move all the stuff currently in App.js to a seperate component
+    - create an "are you Rahul?" form
+    - just send to the backend. verify there the exact "password"
+    - return just a true or false
+    - if true, then just set the state for "rahul" to true
+    - if not, then any time you list your posts, just check that condition
+    - don't render the "Edit button"
+    - optional: conditionally render the menu items if "rahul" is false
+  - create google analytics for the site
+  - host it on heroku
+
+  BUGS:
+    - if I change the title of the post, it adds a row instead of editing it
+
+    NICE TO HAVE:
+    - as you scroll through the page, the title of the current post is shown in AppBar
+    - click on the title of an individual post to just view that post
+    - organize backend to models, routes, and app
+    - undo a link
+    - provide a hover thing for links
+
+  categories:
+        "Economics", "New Music", "Philosophy", "Random"
+        "Politics", "History", "Culture", "Education"
+*/
 
 
 // const menuStyle = {
@@ -39,6 +65,14 @@ const titleStyle = {
 //   text-decoration: none;
 // `
 
+
+const titleStyle = {
+  'color': 'black',
+  'textAlign': 'center',
+  'fontFamily': 'Palatino',
+  'fontSize': 25,
+}
+
 class Main extends Component {
 
   constructor(props){
@@ -47,15 +81,15 @@ class Main extends Component {
     this.state = {
       open: false,
       entries: [],
-      category_entries: [],
-      favorite_entries: [],
+      categories: [],
       rahul: rahul
     }
   }
 
   componentDidMount() {
     // get the entries from the API
-    this.getEntries()
+    this.getEntries(true)
+    this.getCategories()
   }
 
   componentWillReceiveProps(nextProps){
@@ -64,93 +98,53 @@ class Main extends Component {
     }
   }
 
-  getEntries = () => {
-    fetch('http://localhost:5000/posts')
+  getEntries = (favorites) => {
+    const url = `http://localhost:5000/posts${favorites && "?favorites=true"}`
+    this.makeRequest(url, "blog entries")
+  }
+
+  getCategories = () => {
+    const url = `http://localhost:5000/categories`
+    this.makeRequest(url, "categories")
+  }
+
+  fetchCategoryPosts = (categoryId) => {
+    const url = `http://localhost:5000/categories/${categoryId}`
+    this.makeRequest(url, "posts")
+  }
+
+  makeRequest = (url, whatWasFetched) => {
+    fetch(url)
       .then((res) => res.json())
       .then((response) => {
         this.setState({
           entries: response,
-          category_entries: response,
-          favorite_entries: response.filter(post => post["favorite"])
         });
-        console.log("successfully retrieved blog entries")
+        console.log(`successfully retrieved ${whatWasFetched} entries`)
       })
   }
 
-  /* TODO:
-
-    - create a private view for sharing on twitter
-      - move all the stuff currently in App.js to a seperate component
-      - create an "are you Rahul?" form
-      - just send to the backend. verify there the exact "password"
-      - return just a true or false
-      - if true, then just set the state for "rahul" to true
-      - if not, then any time you list your posts, just check that condition
-      - don't render the "Edit button"
-      - optional: conditionally render the menu items if "rahul" is false
-    - create google analytics for the site
-    - host it on heroku
-
-    BUGS:
-      - if I change the title of the post, it adds a row instead of editing it
-
-      NICE TO HAVE:
-      - as you scroll through the page, the title of the current post is shown in AppBar
-      - click on the title of an individual post to just view that post
-      - organize backend to models, routes, and app
-      - undo a link
-      - provide a hover thing for links
-
-    categories:
-          "Economics", "New Music", "Philosophy", "Random"
-          "Politics", "History", "Culture", "Education"
-  */
-
-
   handleOpen = () => this.setState({ open: !this.state.open})
-  // handleClose = () => this.setState({ open: false})
 
-  handleOpenCategory = (posts) => {
+  handleOpenCategory = (categoryId) => {
     this.handleOpen()
-    this.setState({
-      category_entries: posts
-    })
+    this.fetchCategoryPosts(categoryId)
   }
-
-
 
   listCategories = () => {
     // might need to fetch the posts here in order to get the categories
     let menuItems = [<MenuItem primaryText="highlights" key="first" onClick={this.handleOpen} containerElement={<Link to="/"/>}/>]
-    const { entries } = this.state
-    if(entries.length){
-      // collect categories
-      const seenCategories = new Set()
-      entries.forEach((entry) => entry.categories.forEach((category) =>{
-        seenCategories.add(category.name)
-      }))
-      // const categories = seenCategories.entries()
-      console.log("?????????????????????/ categories", seenCategories)
-      seenCategories.forEach((cat) => {
-        const posts = entries.filter((entry) => entry.categories.includes(cat.name))
-        // TODO: Don't pass posts here, fetch when you navigate to the according
-        // category page
-
-        // TODO: remove the attributes and only put categories
-        // Then, fetch all the posts when the user goes to  the next page.
-        menuItems.push((
-            <MenuItem
-            primaryText={`${cat.name}`}
-            key={cat.id}
-            onClick={() => this.handleOpenCategory(posts)}
-            containerElement={
-              <Link to={`/blog/${cat.name}`}/>
-            }
-          />
-        ))
-      })
-    }
-    return menuItems
+    const { categories } = this.state
+    return menuItems + categories.map((category) => (
+        <MenuItem
+          primaryText={`${category.name}`}
+          key={category.id}
+          onClick={() => this.handleOpenCategory(category.id)}
+          containerElement={
+            <Link to={`/blog/${category.name}`}/>
+          }
+        />
+    ))
   }
 
   render() {
@@ -175,9 +169,7 @@ class Main extends Component {
                 'top': 8
               }}
             >
-              <IconButton
-                aria-label="Menu"
-              >
+              <IconButton aria-label="Menu">
                 <MenuIcon/>
               </IconButton>
             </Toolbar>
@@ -187,12 +179,12 @@ class Main extends Component {
           >
             {this.listCategories()}
           </Drawer>
-          <Route exact path="/" render={() => <BlogEntries entries={this.state.favorite_entries} rahul={this.state.rahul}/>}/>
+          <Route exact path="/" render={() => <BlogEntries entries={this.state.entries} rahul={this.state.rahul}/>}/>
           <Route
             path="/blog/:category"
             render={(props) =>
               <BlogEntries
-                entries={this.state.category_entries}
+                entries={this.state.entries}
                 rahul={this.state.rahul}
                 {...props}
               />

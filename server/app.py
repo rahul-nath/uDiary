@@ -114,6 +114,8 @@ class Post(Base):
                 (self.title, self.id, self.date_added, self.body)
 
 
+
+
 class PostCategory(Base):
     """ This class represents an association table for Categories and Posts"""
     __tablename__ = 'categories_posts'
@@ -142,6 +144,24 @@ class Login(Resource):
         else:
             return jsonify({"rahul": ""})
 
+class CategoryList(Resource):
+
+    @marshal_with(category_fields)
+    def get(self):
+        return Category.query.order_by(Category.modified_at.desc()).all()
+
+class CategoryPosts(Resource):
+
+    @marshal_with(post_fields)
+    def get(self, category_id):
+        # gets all posts under this category id
+        posts = []
+        pcs = PostCategory.query.filter_by(category_id=category_id).all()
+        for pc in pcs:
+            posts.extend(pc.posts)
+        return posts
+
+
 class PostList(Resource):
 
     get_parser = reqparse.RequestParser()
@@ -149,7 +169,19 @@ class PostList(Resource):
 
     @marshal_with(post_fields)
     def get(self):
-        return  Post.query.options(joinedload('categories')).order_by(Post.date_added.desc()).all()
+        parsed_args = self.get_parser.parse_args()
+        favorites = parsed_args['favorites']
+        if favorites:
+            posts = Post.query\
+                .filter_by(favorite=True)
+                .options(joinedload('categories'))\
+                .order_by(Post.date_added.desc()).all()
+        else:
+            posts = Post.query\
+                .filter_by(favorite=True)
+                .options(joinedload('categories'))\
+                .order_by(Post.date_added.desc()).all()
+        return posts
 
     def post(self):
         post = json.loads(request.get_data())
@@ -268,6 +300,8 @@ api.add_resource(Home, '/')
 api.add_resource(Login, '/login')
 api.add_resource(PostList, '/posts')
 api.add_resource(PostDetail, '/post/<string:post_id>')
+api.add_resource(CategoryList, '/categories')
+api.add_resource(CategoryPosts, '/categories/<string:category_id>')
 
 
 if __name__ == '__main__':
