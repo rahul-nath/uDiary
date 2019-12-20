@@ -47,6 +47,13 @@ post_fields = {
     'categories': fields.List(fields.Nested(category_fields)),
 }
 
+category_post_fields = {
+    'post_id': fields.Integer,
+    'category_id': fields.Integer,
+    'posts': fields.List(fields.Nested(post_fields)),
+    'categories': fields.List(fields.Nested(category_fields)),
+}
+
 
 class Base(db.Model):
     ''' base model attributes which are added to all models '''
@@ -152,14 +159,10 @@ class CategoryList(Resource):
 
 class CategoryPosts(Resource):
 
-    @marshal_with(post_fields)
+    @marshal_with(category_post_fields)
     def get(self, category_id):
         # gets all posts under this category id
-        posts = []
-        pcs = PostCategory.query.filter_by(category_id=category_id).all()
-        for pc in pcs:
-            posts.extend(pc.posts)
-        return posts
+        return PostCategory.query.filter_by(category_id=category_id).all()
 
 
 class PostList(Resource):
@@ -173,12 +176,12 @@ class PostList(Resource):
         favorites = parsed_args['favorites']
         if favorites:
             posts = Post.query\
-                .filter_by(favorite=True)
+                .filter_by(favorite=True)\
                 .options(joinedload('categories'))\
                 .order_by(Post.date_added.desc()).all()
         else:
             posts = Post.query\
-                .filter_by(favorite=True)
+                .filter_by(favorite=True)\
                 .options(joinedload('categories'))\
                 .order_by(Post.date_added.desc()).all()
         return posts

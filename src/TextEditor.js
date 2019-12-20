@@ -122,7 +122,7 @@ class TextEditor extends Component {
       'old_post_title': oldTitle,
       body,
       favorite,
-      category,
+      categories,
       title
     })
     if(id){

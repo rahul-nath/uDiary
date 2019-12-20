@@ -10,20 +10,44 @@ import { Link } from 'react-router-dom'
 class BlogEntries extends React.Component {
   constructor(props) {
     super(props)
-    const { entries, rahul, match } = this.props
+    const { categoryId, rahul, match } = this.props
     this.state = {
-      entries: entries,
-      rahul: rahul,
-      category: match ? match.params.category : ''
+      category: match ? match.params.category : '',
+      entries: [],
+      categoryId,
+      rahul
     }
   }
 
-  componentWillReceiveProps(newProps)  {
-    const { entries, match } = newProps
-    this.setState({
-      entries: (entries ? entries : []),
-      category: match ? match.params.category : ''  
-    })
+  componentDidMount(){
+    // TODO: combine the fetch calls into one
+    this.fetchPosts(this.state.categoryId)
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    const { match } = nextProps
+    return { category: match ? match.params.category : prevState.category }
+  }
+
+  fetchPosts = (categoryId) => {
+
+    const url = (
+      categoryId
+      ? `http://localhost:5000/categories/${categoryId}`
+      : `http://localhost:5000/posts?favorites=true`
+    )
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((response) => {
+        const entries = (
+          categoryId
+          ? [].concat.apply([], response.map((pc) => pc.posts))
+          : response
+        )
+        this.setState({ entries })
+        console.log("successfully retrieved posts")
+      })
   }
 
   displayPosts = (posts) => posts && posts.map((post, i) => {
@@ -45,7 +69,6 @@ class BlogEntries extends React.Component {
       </div>
     )
   })
-
 
   render() {
     const { rahul, entries, category } = this.state

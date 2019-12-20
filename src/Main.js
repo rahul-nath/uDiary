@@ -13,6 +13,11 @@ import BlogEntries from './BlogEntries'
 
 /* TODO:
 
+***Fix category listing***
+- on load fetch posts by category
+- create fetch to get all categories
+- when clicked, fetch posts by that cat id
+******************************************
   TODO: refactor getEntries calls to accept an
   endpoint adn genraliz3ed this to an actual class that does all teh fetching
 
@@ -80,15 +85,13 @@ class Main extends Component {
     const { rahul } = this.props
     this.state = {
       open: false,
-      entries: [],
       categories: [],
-      rahul: rahul
+      categoryId: '',
+      rahul
     }
   }
 
   componentDidMount() {
-    // get the entries from the API
-    this.getEntries(true)
     this.getCategories()
   }
 
@@ -98,44 +101,39 @@ class Main extends Component {
     }
   }
 
-  getEntries = (favorites) => {
-    const url = `http://localhost:5000/posts${favorites && "?favorites=true"}`
-    this.makeRequest(url, "blog entries")
-  }
-
   getCategories = () => {
     const url = `http://localhost:5000/categories`
-    this.makeRequest(url, "categories")
-  }
-
-  fetchCategoryPosts = (categoryId) => {
-    const url = `http://localhost:5000/categories/${categoryId}`
-    this.makeRequest(url, "posts")
-  }
-
-  makeRequest = (url, whatWasFetched) => {
     fetch(url)
-      .then((res) => res.json())
-      .then((response) => {
-        this.setState({
-          entries: response,
-        });
-        console.log(`successfully retrieved ${whatWasFetched} entries`)
-      })
+    .then((res) => res.json())
+    .then((response) => {
+      this.setState({
+        categories: response,
+      });
+      console.log(`successfully retrieved categories`)
+    })
   }
 
   handleOpen = () => this.setState({ open: !this.state.open})
 
   handleOpenCategory = (categoryId) => {
-    this.handleOpen()
-    this.fetchCategoryPosts(categoryId)
+    this.setState({
+      open: !this.state.open,
+      categoryId
+    })
   }
 
   listCategories = () => {
     // might need to fetch the posts here in order to get the categories
-    let menuItems = [<MenuItem primaryText="highlights" key="first" onClick={this.handleOpen} containerElement={<Link to="/"/>}/>]
+    let menuItems = [
+      <MenuItem
+        primaryText="highlights"
+        key="favorites"
+        onClick={this.handleOpen}
+        containerElement={<Link to="/"/>}
+      />
+    ]
     const { categories } = this.state
-    return menuItems + categories.map((category) => (
+    return [...menuItems, ...categories.map((category) => (
         <MenuItem
           primaryText={`${category.name}`}
           key={category.id}
@@ -144,10 +142,11 @@ class Main extends Component {
             <Link to={`/blog/${category.name}`}/>
           }
         />
-    ))
+    ))]
   }
 
   render() {
+    const { categoryId, open, rahul } = this.state
     return (
       <Router>
         <div className="mb5 bg--white">
@@ -174,22 +173,23 @@ class Main extends Component {
               </IconButton>
             </Toolbar>
           </AppBar>
-          <Drawer
-            open={this.state.open}
-          >
+          <Drawer open={open}>
             {this.listCategories()}
           </Drawer>
-          <Route exact path="/" render={() => <BlogEntries entries={this.state.entries} rahul={this.state.rahul}/>}/>
+          <Route
+            exact path="/"
+            render={() => <BlogEntries rahul/>}
+          />
           <Route
             path="/blog/:category"
-            render={(props) =>
+            render={
+              (props) =>
               <BlogEntries
-                entries={this.state.entries}
-                rahul={this.state.rahul}
+                categoryId={categoryId}
+                rahul={rahul}
                 {...props}
-              />
-            }
-            />
+              />}
+          />
           <Route path="/new-post" component={TextEditor}/>
           <Route path="/edit-post/:id" component={TextEditor}/>
         </div>
