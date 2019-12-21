@@ -94,7 +94,6 @@ class TextEditor extends Component {
     let fav = fav_regex.exec(bodyHtml)
     const cat = reg.exec(bodyHtml)
 
-    const category = cat ? cat[1] : "random"
     const favorite = !!fav
 
     // side: "while arr: arr.pop()" processes arr like a stack
@@ -122,7 +121,7 @@ class TextEditor extends Component {
       'old_post_title': oldTitle,
       body,
       favorite,
-      category,
+      categories,
       title
     })
     if(id){
