@@ -15,8 +15,9 @@ Figuring out how to package it for the layperson to just start up and start blog
 
 ## What's up next?
 
-- Adding multiple categories
 - Streamlining deployment, db initalization, private mode
 - Adding media
 
+## New features added
+Added multiple categories
 

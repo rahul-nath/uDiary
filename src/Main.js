@@ -95,11 +95,9 @@ class Main extends Component {
     this.getCategories()
   }
 
-  componentWillReceiveProps(nextProps){
-    if (nextProps.location.state === 'newPost') {
-      this.forceUpdate()
-    }
-  }
+  // componentWillReceiveProps(nextProps){
+  //   this.forceUpdate()
+  // }
 
   getCategories = () => {
     const url = `http://localhost:5000/categories`

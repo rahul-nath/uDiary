@@ -123,8 +123,6 @@ class Post(Base):
                 (self.title, self.id, self.date_added, self.body)
 
 
-
-
 class PostCategory(Base):
     """ This class represents an association table for Categories and Posts"""
     __tablename__ = 'categories_posts'
@@ -183,7 +181,6 @@ class PostList(Resource):
                 .order_by(Post.date_added.desc()).all()
         else:
             posts = Post.query\
-                .filter_by(favorite=True)\
                 .options(joinedload('categories'))\
                 .order_by(Post.date_added.desc()).all()
         return posts

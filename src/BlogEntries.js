@@ -24,6 +24,13 @@ class BlogEntries extends React.Component {
     this.fetchPosts(this.state.categoryId)
   }
 
+  componentDidUpdate(prevProps, prevState){
+    if (prevState.categoryId !== this.props.categoryId){
+      this.setState({ categoryId: this.props.categoryId})
+      this.fetchPosts(this.props.categoryId)
+    }
+  }
+
   static getDerivedStateFromProps(nextProps, prevState) {
     const { match } = nextProps
     return { category: match ? match.params.category : prevState.category }
