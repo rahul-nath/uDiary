@@ -115,6 +115,8 @@ class Post(Base):
         self.body = body
         self.title = title
         self.favorite = favorite
+        self.display_date = display_date
+        self.date_added = dt.now()
 
     def __repr__(self):
         return 'Title: %r ID: %r date added: %r body: %r' % \
@@ -132,7 +134,7 @@ class PostCategory(Base):
     posts = db.relationship(Post, backref=db.backref("post_assoc"))
 
     def __init__(self, category_id=0, post_id=0):
-        self.category_id = tag_id
+        self.category_id = category_id
         self.post_id = post_id
 
 
@@ -247,7 +249,7 @@ class PostDetail(Resource):
         post_categories = PostCategory.query.filter_by(post_id=post_id).all()
 
         # get the category ids of the categories
-        existing_cat_ids = set([p["category_id"] for p in post_categories])
+        existing_cat_ids = set([p.category_id for p in post_categories])
 
         # delete all the categories for this post
         for pc in post_categories:
@@ -260,7 +262,7 @@ class PostDetail(Resource):
                 to_delete = Category.query.filter_by(id=cat_id).first()
                 to_delete.delete()
 
-        cat_names_to_create = set(post["categories"].split(","))
+        cat_names_to_create = set(post["categories"])
         for name in cat_names_to_create:
             old_cat = Category.query.filter_by(name=name).first()
             if not old_cat:
@@ -287,7 +289,7 @@ class PostDetail(Resource):
         # get the post
         old_post = Post.query.filter_by(id=post_id)
         post_categories = PostCategory.query.filter_by(post_id=post_id).all()
-        old_post_category_ids = set([pc["category_id"] for pc in post_categories])
+        old_post_category_ids = set([pc.category_id for pc in post_categories])
         for pc in post_categories:
             pc.delete()
 
@@ -296,7 +298,9 @@ class PostDetail(Resource):
             if not another_post:
                 to_delete = Category.query.filter_by(id=cat_id).first()
                 to_delete.delete()
-
+        old_post.delete()
+        db.session.flush()
+        db.session.commit()
         return "true"
 
 api.add_resource(Home, '/')
