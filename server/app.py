@@ -162,7 +162,7 @@ class CategoryPosts(Resource):
     @marshal_with(category_post_fields)
     def get(self, category_id):
         # gets all posts under this category id
-        return PostCategory.query.filter_by(category_id=category_id).all()
+        return PostCategory.query.filter_by(category_id=category_id).order_by(PostCategory.created_at).all()
 
 
 class PostList(Resource):
