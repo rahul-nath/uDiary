@@ -103,7 +103,7 @@ class TextEditor extends Component {
     let i = 0
     let newCategory
 
-    while(bodyHtml.indexOf("#") > -1){
+    while(bodyHtml.indexOf("#") > -1 && reg.exec(bodyHtml)){
       newCategory = reg.exec(bodyHtml)[0]
       bodyHtml = bodyHtml.replace(newCategory, `{${i++}}`)
       categories.push(newCategory.substring(1))
