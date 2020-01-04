@@ -1,1 +1,1 @@
-web: flask db upgrade; gunicorn --chdir server app:app
+web: flask db upgrade; flask translate compile; gunicorn --chdir server app:app
