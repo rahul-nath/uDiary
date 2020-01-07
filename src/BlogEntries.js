@@ -40,8 +40,8 @@ class BlogEntries extends React.Component {
 
     const url = (
       categoryId
-      ? `https://urdiary-server.herokuapp.com/categories/${categoryId}`
-      : `https://urdiary-server.herokuapp.com/posts?favorites=true`
+      ? `${process.env.REACT_APP_API_URL}/categories/${categoryId}`
+      : `${process.env.REACT_APP_API_URL}/posts?favorites=true`
     )
 
     fetch(url)

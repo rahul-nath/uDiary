@@ -100,7 +100,7 @@ class Main extends Component {
   // }
 
   getCategories = () => {
-    const url = `https://urdiary-server.herokuapp.com/categories`
+    const url = `${process.env.REACT_APP_API_URL}/categories`
     fetch(url)
     .then((res) => res.json())
     .then((response) => {

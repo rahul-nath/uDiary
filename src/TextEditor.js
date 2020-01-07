@@ -133,7 +133,7 @@ class TextEditor extends Component {
   _editPost = (postId) => {
 
     const post = this.createPost()
-    fetch(`https://urdiary-server.herokuapp.com/post/${postId}`, {
+    fetch(`${process.env.REACT_APP_API_URL}/post/${postId}`, {
       method: "put",
       headers: {
         'Accept': 'application/x-www-form-urlencoded;',
@@ -148,7 +148,7 @@ class TextEditor extends Component {
     const post = this.createPost()
     if(!Object.keys(post).length) return
 
-    fetch('https://urdiary-server.herokuapp.com/posts', {
+    fetch(`${process.env.REACT_APP_API_URL}/posts`, {
       method: "post",
       headers: {
         'Accept': 'application/x-www-form-urlencoded;',
@@ -171,7 +171,7 @@ class TextEditor extends Component {
 
   deletePost = (postId) => {
     const post = this.createPost()
-    fetch(`https://urdiary-server.herokuapp.com/post/${postId}`, {
+    fetch(`${process.env.REACT_APP_API_URL}/post/${postId}`, {
       method: "delete",
       headers: {
         'Accept': 'application/x-www-form-urlencoded;',
