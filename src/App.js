@@ -14,7 +14,7 @@ const App = (props) => {
   const postPasscode = () => {
     const login = { password }
 
-    fetch('http://localhost:5000/login', {
+    fetch('https://urdiary-server.herokuapp.com/login', {
       method: "post",
       headers: {
         'Accept': 'application/x-www-form-urlencoded;',
